@@ -1,0 +1,1784 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Squires &amp; Rotations</title>
+<style>
+:root{--green:#86BC25;--dark:#282728;--blue:#005587;--tile:#e7e4de;--cell:42px;--glyph:28px;--hold:#8a8a8a}
+*{box-sizing:border-box}
+body{margin:0;background:#f5f5f5;color:#171717;font:14px/1.4 Arial,sans-serif}
+header{padding:20px 24px;background:var(--dark);color:#fff;border-bottom:5px solid var(--green)}
+h1{margin:0 0 5px;font-size:27px}
+main{max-width:1600px;margin:auto;padding:16px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+button,select{font:inherit;padding:8px 10px;border:1px solid #aaa;border-radius:4px;background:#fff}
+button{cursor:pointer}
+button:hover:not(:disabled){border-color:var(--green)}
+button:disabled{opacity:.48;cursor:not-allowed}
+button.primary{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:bold}
+.setupbar{padding:10px 12px;background:#fff8e1;border:1px solid #e0c36a;border-radius:4px}
+.move-panels{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.mpanel{flex:1 1 340px;padding:10px 14px 12px;background:#fff;border:2px solid var(--pc);border-radius:8px;opacity:.6}
+.mpanel.live{opacity:1;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.mpanel.white{--pc:#0072bc}
+.mpanel.black{--pc:#c0392b}
+.mp-title{font-weight:bold;margin-bottom:8px;color:var(--pc)}
+.mp-groups{display:flex;gap:26px;flex-wrap:wrap}
+.mp-label{display:block;margin-bottom:4px;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.05em}
+.mp-btns{display:flex;gap:8px}
+.pal{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:72px;height:68px;padding:4px;border:2px solid var(--pc);border-radius:8px;background:var(--tile)}
+.pal .g{font-size:30px;line-height:1}
+.pal small{font-size:11px;line-height:1.1;text-align:center;color:#333;text-shadow:none}
+.pal.white .g{color:#fff;text-shadow:1px 1px 2px #111,-1px -1px 2px #111}
+.pal.black .g{color:#111;text-shadow:1px 1px 2px #fff,-1px -1px 2px #fff}
+.pal.rot .g{color:#222;text-shadow:none;font-size:32px}
+.pal:hover:not(:disabled){background:#eef6dc}
+.pal.armed{background:var(--green);box-shadow:inset 0 0 0 3px #4a6b10}
+.pal:disabled{opacity:.35}
+.cell.pending{outline:3px dashed var(--green);outline-offset:-3px}
+#status{padding:12px;background:#fff;border-left:4px solid #00A3E0;margin-bottom:12px}
+#status.over{border-left-color:var(--green);font-weight:bold}
+.scores{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.score{min-width:220px;padding:10px;background:#fff;border:1px solid #d5d5d5}
+.score.turn{border-color:var(--green);box-shadow:inset 0 0 0 2px var(--green)}
+.score .warn{color:#b00020;font-weight:bold}
+.workspace-wrap{overflow:auto;background:#fff;border:1px solid #ddd;padding:20px}
+.workspace{position:relative;margin:auto}
+.field{position:absolute}
+.field.dim{opacity:.4}
+.field.pick{filter:drop-shadow(0 0 6px var(--green))}
+.grid{position:relative;display:grid}
+.grid::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 3px var(--hold);pointer-events:none;z-index:6}
+.held-white{--hold:#0072bc}
+.held-black{--hold:#c0392b}
+.held-none{--hold:#8a8a8a}
+.cell{position:relative;display:grid;place-items:center;width:var(--cell);height:var(--cell);padding:0;border:1px solid #595959;border-radius:0;background:var(--tile);font-size:var(--glyph);line-height:1}
+.cell .pc{display:block;line-height:1;pointer-events:none}
+.cell.white{color:#fff;text-shadow:1px 1px 2px #111,-1px -1px 2px #111}
+.cell.black{color:#111;text-shadow:1px 1px 2px #fff,-1px -1px 2px #fff}
+.cell:hover:not(:disabled){outline:2px solid var(--green);outline-offset:-2px;z-index:3}
+.cell.selected{outline:4px solid var(--green);outline-offset:-4px;z-index:2}
+.cell.last{box-shadow:inset 0 0 0 3px rgba(0,163,224,.85)}
+.cell.legal::before{content:"";position:absolute;width:30%;height:30%;border-radius:50%;background:rgba(134,188,37,.9);z-index:1;pointer-events:none}
+.cell.legal.enemy::before{width:84%;height:84%;background:none;border:3px solid #c0392b}
+.cell.removing .pc{animation:blinkTwice 1s steps(1,end) 1}
+.cell.landed{animation:flashRing 1s steps(1,end) 1}
+@keyframes blinkTwice{0%,24%,50%,74%{opacity:1}25%,49%,75%,100%{opacity:0}}
+@keyframes flashRing{0%,24%,50%,74%{box-shadow:inset 0 0 0 6px #c0392b}25%,49%,75%,100%{box-shadow:none}}
+.panel{margin-top:12px;padding:13px;background:#fff;border:1px solid #ddd;line-height:1.5}
+.scoring{border-left:4px solid var(--green)}
+.panel h2{margin:0 0 6px;font-size:17px}
+.panel h3{margin:14px 0 4px;font-size:15px}
+.panel ul,.panel ol{margin:4px 0 0;padding-left:22px}
+.panel table{border-collapse:collapse;margin:8px 0;min-width:520px}
+.panel th,.panel td{padding:5px 10px;border:1px solid #d5d5d5;text-align:center}
+.panel th{background:#f0f0f0}
+.muted{color:#666}
+.legend span{display:inline-block;margin-right:12px}
+.sw{display:inline-block;width:12px;height:12px;vertical-align:-1px;margin-right:4px}
+#log{max-height:220px;overflow:auto;font-size:13px}
+pre#testOutput{white-space:pre-wrap;margin-top:12px;padding:13px;background:#fff;border:1px solid #ddd}
+@media(max-width:700px){main{padding:9px}.workspace-wrap{padding:10px}.panel table{min-width:0}.pal{width:64px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Squires &amp; Rotations</h1>
+  <div>Connected fields · flank captures · rotating boards</div>
+</header>
+<main>
+  <div class="toolbar">
+    <label>Game mode:
+      <select id="mode">
+        <option value="hill">King of the Hill (points)</option>
+        <option value="emperor">Emperor</option>
+        <option value="plurality">Plurality (majority of the board)</option>
+      </select>
+    </label>
+    <label>Layout:
+      <select id="layout">
+        <option value="straight">Straight line</option>
+        <option value="zigzag">Zig-zag</option>
+        <option value="block">Big block (homes touch the 7×7)</option>
+      </select>
+    </label>
+    <label>Opponent:
+      <select id="opponent">
+        <option value="normal">Computer – Normal</option>
+        <option value="easy">Computer – Easy</option>
+        <option value="optimized">Computer – Optimized</option>
+        <option value="human">Human (hot-seat, same screen)</option>
+      </select>
+    </label>
+    <label id="targetLabel">Play to:
+      <select id="target">
+        <option value="51">51 points</option>
+        <option value="75">75 points</option>
+        <option value="100" selected>100 points</option>
+      </select>
+    </label>
+    <button id="newGame">New Game</button>
+    <button id="endGame">End Game</button>
+    <button id="undoBtn" disabled>Undo</button>
+    <button id="tests" hidden>Run Rule Tests</button>
+  </div>
+
+  <div class="setupbar" id="setupBar" hidden>
+    <span id="setupText"></span>
+    <button id="confirmEmperor" class="primary">Confirm Emperor</button>
+  </div>
+
+  <div id="status" role="status" aria-live="polite"></div>
+  <div id="scores" class="scores"></div>
+  <div class="workspace-wrap" id="workspaceWrap"><div id="workspace" class="workspace"></div></div>
+  <div id="movePanels" class="move-panels"></div>
+  <div id="scoringPanel" class="panel scoring"></div>
+
+  <div class="panel" id="rules"></div>
+
+  <details class="panel" id="logPanel">
+    <summary><strong>Move log</strong> (copy it into your beta-test feedback)</summary>
+    <ol id="log"></ol>
+    <button id="copyLog">Copy log</button>
+  </details>
+
+  <pre id="testOutput" hidden></pre>
+</main>
+
+<script>
+"use strict";
+
+//#ENGINE_START
+/* =====================================================================
+   ENGINE – pure game rules and AI. No DOM access in this block.
+   ===================================================================== */
+
+const SIZES=[3,5,7,5,3];
+const FIELD_NAMES=["W 3×3","W 5×5","Center 7×7","B 5×5","B 3×3"];
+const FIELD_VALUE=[1,2,3,2,1];          // points per turn for holding each field
+const BIG_FIELD=2;                      // the 7×7: tiebreaker field
+const DEFAULT_TARGET=100;
+const START_TURN={white:4,black:3};     // scoring begins on each side's Nth turn (a mode can override with its own startTurn)
+const MARSHAL_RANGE=1;                  // 1 = the surrounding 3×3
+const MARSHAL_MIN_SQUIRES=3;
+const KINDS=["squire","knight","marshal"];
+const ORTHO=[[1,0],[-1,0],[0,1],[0,-1]];                 // [dy,dx]
+const INFLUENCE={squire:1,knight:1,marshal:2,emperor:0};
+const PIECE_VALUE={squire:1,knight:2,marshal:6,emperor:40};  // AI heuristics only
+const STRATEGIC_VALUE={squire:.35,knight:.45,marshal:.6,emperor:0}; // AI heuristics only
+const EMPEROR_CAPTURABLE_ONLY=true;      // keep Emperors off squares where no flank could ever be forced
+const EMPEROR_START={r:1,c:1};          // centre of the home 3×3: it never moves, even when the field rotates
+
+// Every layout is 180°-point-symmetric: field i maps onto field 4-i.
+const LAYOUTS={
+  straight:{label:"Straight line",
+    positions:[{x:0,y:2},{x:3,y:1},{x:8,y:0},{x:15,y:1},{x:20,y:2}]},
+  zigzag:{label:"Zig-zag",
+    positions:[{x:0,y:0},{x:0,y:3},{x:5,y:2},{x:12,y:3},{x:14,y:8}]},
+  block:{label:"Big block",
+    positions:[{x:0,y:2},{x:3,y:0},{x:1,y:5},{x:1,y:12},{x:6,y:12}]}
+};
+
+const other=color=>color==="white"?"black":"white";
+const cap=text=>text[0].toUpperCase()+text.slice(1);
+const keyOf=sq=>`${sq.f}:${sq.r}:${sq.c}`;
+const parseKey=key=>{const[f,r,c]=key.split(":").map(Number);return{f,r,c}};
+const emptyGrid=n=>Array.from({length:n},()=>Array(n).fill(null));
+const inside=(f,r,c)=>r>=0&&c>=0&&r<SIZES[f]&&c<SIZES[f];
+
+/* ---------- game modes ----------
+   A mode supplies: setup (extra starting pieces), afterCaptures (win checks tied to
+   what was captured), endTurn (scoring etc.) and evaluate (AI heuristic).
+   Add a new mode by adding an entry here. */
+const MODES={
+  hill:{
+    label:"King of the Hill",usesPoints:true,
+    setup(state){                       // each side's starting Squire road (point-symmetric)
+      for(let r=0;r<3;r++){
+        state.fields[0].grid[r][0]={color:"white",kind:"squire"};
+        state.fields[4].grid[r][2]={color:"black",kind:"squire"};
+      }
+    },
+    afterCaptures(state,color,lost){},
+    endTurn(state,color,result){
+      const before=state.points[color];
+      accrue(state,color);
+      result.gained=state.points[color]-before;
+      if(color==="black")checkRoundEnd(state);
+    },
+    evaluate:(state,me)=>evaluateHill(state,me)
+  },
+  plurality:{
+    label:"Plurality",usesPoints:true,
+    weights:{squire:1,knight:2,marshal:3,emperor:0},   // how much each piece counts toward a field
+    boardMajority:true,                                 // a field scores only with >= half its squares of presence
+    startTurn:{white:4,black:4},                        // equal start: with Black's usual head start it won 70-85% of races
+    setup(state){MODES.hill.setup(state)},
+    afterCaptures(state,color,lost){},
+    endTurn(state,color,result){MODES.hill.endTurn(state,color,result)},
+    // A tie at the target goes to whoever has more total presence on the board; level still = play on.
+    tieBreak(state){
+      const t={white:0,black:0};
+      for(let f=0;f<SIZES.length;f++){const i=fieldInfluence(state,f);t.white+=i.white;t.black+=i.black}
+      return{winner:t.white===t.black?null:t.white>t.black?"white":"black",why:"having more total presence on the board"};
+    },
+    evaluate:(state,me)=>evaluatePlurality(state,me)
+  },
+  emperor:{
+    label:"Emperor",usesPoints:false,
+    marshalLocksRotation:true,            // decided by testing (see notes)
+    squireLoss:false,                     // no starting Squires: the Emperor is the objective, not the army
+    setup(state){
+      state.fields[0].grid[EMPEROR_START.r][EMPEROR_START.c]={color:"white",kind:"emperor"};
+      state.fields[4].grid[EMPEROR_START.r][EMPEROR_START.c]={color:"black",kind:"emperor"};
+    },
+    afterCaptures(state,color,lost){
+      if(lost.includes("emperor"))
+        finish(state,color,`${cap(color)} captured the ${cap(other(color))} Emperor.`);
+    },
+    endTurn(){},
+    evaluate:(state,me)=>evaluateEmperor(state,me)
+  }
+};
+
+/* ---------- state ---------- */
+
+function newState({layoutName="straight",target=DEFAULT_TARGET,mode="hill"}={}){
+  return{
+    layoutName,target,mode,phase:"play",picks:null,
+    fields:SIZES.map(size=>({size,rotation:0,grid:emptyGrid(size)})),
+    turn:"white",ply:0,over:false,winner:null,endReason:"",
+    marshalUsed:{white:false,black:false},
+    turns:{white:0,black:0},
+    points:{white:0,black:0}
+  };
+}
+
+// New game. Each mode places its own starting pieces (Hill: a Squire road; Emperor mode: the Emperors).
+function createGame(options={}){
+  const state=newState(options);
+  if(options.emperorSetup&&state.mode==="emperor"){
+    // Hidden placement: picks stay off the board until revealEmperors().
+    state.phase="setup";
+    state.picks={white:null,black:null};
+  }else MODES[state.mode].setup(state);
+  return state;
+}
+
+function cloneState(s){
+  return{...s,
+    fields:s.fields.map(f=>({size:f.size,rotation:f.rotation,
+      grid:f.grid.map(row=>row.map(p=>p?{...p}:null))})),
+    marshalUsed:{...s.marshalUsed},turns:{...s.turns},points:{...s.points},
+    picks:s.picks?{...s.picks}:null};
+}
+
+/* ---------- geometry ---------- */
+
+const TOPO={};
+function topology(layoutName){
+  if(TOPO[layoutName])return TOPO[layoutName];
+  const map=new Map();
+  LAYOUTS[layoutName].positions.forEach((p,f)=>{
+    for(let r=0;r<SIZES[f];r++)for(let c=0;c<SIZES[f];c++)
+      map.set(`${p.x+c}:${p.y+r}`,{f,r,c});
+  });
+  return TOPO[layoutName]=map;
+}
+const globalPos=(state,sq)=>{const p=LAYOUTS[state.layoutName].positions[sq.f];return{x:p.x+sq.c,y:p.y+sq.r}};
+const squareAt=(state,x,y)=>topology(state.layoutName).get(`${x}:${y}`)||null;
+function step(state,sq,dy,dx){const p=globalPos(state,sq);return squareAt(state,p.x+dx,p.y+dy)}
+
+/* ---------- piece access ---------- */
+
+const rawAt=(state,sq)=>state.fields[sq.f].grid[sq.r][sq.c];
+function at(state,sq){const p=rawAt(state,sq);return p&&!p.removing?p:null}
+
+function eachPiece(state,fn){
+  state.fields.forEach((field,f)=>field.grid.forEach((row,r)=>
+    row.forEach((p,c)=>{if(p&&!p.removing)fn(p,f,r,c)})));
+}
+function countPieces(state,color,kind=null){
+  let n=0;
+  eachPiece(state,p=>{if(p.color===color&&(!kind||p.kind===kind))n++});
+  return n;
+}
+function countField(state,color,f,kind=null){
+  let n=0;
+  state.fields[f].grid.forEach(row=>row.forEach(p=>{
+    if(p&&!p.removing&&p.color===color&&(!kind||p.kind===kind))n++;
+  }));
+  return n;
+}
+const hasMarshal=(state,f,color)=>countField(state,color,f,"marshal")>0;
+function findPieces(state,color,kind){
+  const out=[];
+  eachPiece(state,(p,f,r,c)=>{if(p.color===color&&p.kind===kind)out.push({f,r,c})});
+  return out;
+}
+
+/* ---------- flanking ---------- */
+
+// Enemy runs that a piece of `color`/`kind` standing on `sq` would bracket.
+// `sq` may be empty (hypothetical placement). Pure lookup, changes nothing.
+function linesFrom(state,sq,color){
+  const lines=[];
+  for(const[dy,dx] of ORTHO){
+    const run=[];
+    let next=step(state,sq,dy,dx);
+    while(next){
+      const p=at(state,next);
+      if(!p)break;
+      if(p.color===color){
+        if(run.length)lines.push({run,end:next});
+        break;
+      }
+      run.push(next);
+      next=step(state,next,dy,dx);
+    }
+  }
+  return lines;
+}
+
+// Squares captured by `move` (already applied to `state`). Captures are tied to
+// the piece that just acted: placed piece, moved Marshal, or any flank that
+// touches a rotated field.
+function capturesForMove(state,move,color){
+  const out=new Map();
+  const add=lines=>lines.forEach(l=>l.run.forEach(s=>out.set(keyOf(s),s)));
+  if(move.type==="place"){
+    const sq={f:move.f,r:move.r,c:move.c};
+    add(linesFrom(state,sq,color));
+  }else if(move.type==="marshalMove"){
+    add(linesFrom(state,move.to,color));
+  }else if(move.type==="rotate"){
+    eachPiece(state,(p,f,r,c)=>{
+      if(p.color!==color)return;
+      linesFrom(state,{f,r,c},color).forEach(line=>{
+        const touches=f===move.f||line.end.f===move.f||line.run.some(s=>s.f===move.f);
+        if(touches)line.run.forEach(s=>out.set(keyOf(s),s));
+      });
+    });
+  }
+  return[...out.values()];
+}
+
+/* ---------- legality ---------- */
+
+function canPlace(state,kind,f,r,c,color=state.turn){
+  if(!inside(f,r,c))return false;
+  const sq={f,r,c};
+  if(at(state,sq))return false;
+  if(kind==="squire"){
+    return ORTHO.some(([dy,dx])=>{
+      const n=step(state,sq,dy,dx);
+      return n&&at(state,n)?.color===color;
+    });
+  }
+  if(kind==="knight")return linesFrom(state,sq,color).length>0;
+  if(kind==="marshal")return !state.marshalUsed[color]&&countField(state,color,f,"squire")>=MARSHAL_MIN_SQUIRES;
+  return false;
+}
+
+function marshalTargets(state,from,color){
+  const out=[];
+  for(let dr=-MARSHAL_RANGE;dr<=MARSHAL_RANGE;dr++){
+    for(let dc=-MARSHAL_RANGE;dc<=MARSHAL_RANGE;dc++){
+      if(!dr&&!dc)continue;
+      const r=from.r+dr,c=from.c+dc;
+      if(!inside(from.f,r,c))continue;
+      const sq={f:from.f,r,c},p=at(state,sq);
+      if(!p||p.color!==color)out.push(sq);
+    }
+  }
+  return out;
+}
+
+// A rotation must not carry an Emperor onto a square that can't be captured (see hasFlankAxis).
+function rotationKeepsEmperorsSafe(state,f,dir){
+  if(!EMPEROR_CAPTURABLE_ONLY)return true;
+  const n=SIZES[f];
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++){
+    const p=state.fields[f].grid[r][c];
+    if(p&&!p.removing&&p.kind==="emperor"){
+      const to=dir===1?{r:c,c:n-1-r}:{r:n-1-c,c:r};
+      if(!hasFlankAxis(state,{f,r:to.r,c:to.c}))return false;
+    }
+  }
+  return true;
+}
+
+// dir 1 = right, -1 = left; omit dir to ask "can this field be rotated either way?"
+function canRotate(state,f,color,dir){
+  const allowed=countField(state,color,f,"squire")>0&&
+    !(MODES[state.mode].marshalLocksRotation!==false&&hasMarshal(state,f,other(color)));
+  if(!allowed)return false;
+  if(dir===undefined)return rotationKeepsEmperorsSafe(state,f,1)||rotationKeepsEmperorsSafe(state,f,-1);
+  return rotationKeepsEmperorsSafe(state,f,dir);
+}
+
+function legalMoves(state,color=state.turn){
+  const moves=[];
+  state.fields.forEach((field,f)=>field.grid.forEach((row,r)=>row.forEach((_,c)=>{
+    if(at(state,{f,r,c}))return;
+    for(const kind of KINDS)if(canPlace(state,kind,f,r,c,color))moves.push({type:"place",kind,f,r,c});
+  })));
+  findPieces(state,color,"marshal").forEach(from=>
+    marshalTargets(state,from,color).forEach(to=>moves.push({type:"marshalMove",from,to})));
+  SIZES.forEach((_,f)=>{
+    for(const dir of[1,-1])if(canRotate(state,f,color,dir))moves.push({type:"rotate",f,dir});
+  });
+  return moves;
+}
+
+// Early-exit version used for the "no legal move" loss check.
+function hasLegalMove(state,color){
+  if(SIZES.some((_,f)=>canRotate(state,f,color)))return true;
+  if(findPieces(state,color,"marshal").some(m=>marshalTargets(state,m,color).length))return true;
+  for(let f=0;f<SIZES.length;f++)for(let r=0;r<SIZES[f];r++)for(let c=0;c<SIZES[f];c++){
+    if(at(state,{f,r,c}))continue;
+    for(const kind of KINDS)if(canPlace(state,kind,f,r,c,color))return true;
+  }
+  return false;
+}
+
+/* ---------- rotation ---------- */
+
+function rotateField(state,f,dir){
+  const old=state.fields[f].grid,n=old.length;
+  state.fields[f].grid=Array.from({length:n},(_,r)=>
+    Array.from({length:n},(_,c)=>dir===1?old[n-1-c][r]:old[c][n-1-r]));
+  state.fields[f].rotation=(state.fields[f].rotation+dir*90+360)%360;
+}
+
+/* ---------- scoring ---------- */
+
+// Half the squares plus one: 3×3 -> 5, 5×5 -> 13, 7×7 -> 25 (used by Plurality).
+const fieldThreshold=f=>Math.floor(SIZES[f]*SIZES[f]/2)+1;
+
+// Weighted presence on a field (weights come from the mode; Hill: 1/1/2, Plurality: 1/2/3).
+function fieldInfluence(state,f){
+  const w=MODES[state.mode].weights||INFLUENCE;
+  const total={white:0,black:0};
+  state.fields[f].grid.forEach(row=>row.forEach(p=>{
+    if(p&&!p.removing)total[p.color]+=w[p.kind];
+  }));
+  return total;
+}
+function fieldOwner(state,f){
+  const i=fieldInfluence(state,f);
+  if(MODES[state.mode].boardMajority){            // Plurality: need half the board AND more than the opponent
+    const need=fieldThreshold(f);
+    if(i.white>=need&&i.white>i.black)return"white";
+    if(i.black>=need&&i.black>i.white)return"black";
+    return null;
+  }
+  if(i.white===i.black)return null;
+  return i.white>i.black?"white":"black";
+}
+const fieldPoints=(state,color)=>
+  SIZES.reduce((sum,_,f)=>sum+(fieldOwner(state,f)===color?FIELD_VALUE[f]:0),0);
+
+const startTurnOf=(state,color)=>(MODES[state.mode].startTurn||START_TURN)[color];
+
+function score(state){
+  const out={};
+  for(const color of["white","black"]){
+    out[color]={fields:fieldPoints(state,color),total:state.points[color],
+      turns:state.turns[color],scoring:state.turns[color]>=startTurnOf(state,color)};
+  }
+  return out;
+}
+
+function accrue(state,color){
+  state.turns[color]++;
+  if(state.turns[color]>=startTurnOf(state,color))state.points[color]+=fieldPoints(state,color);
+}
+
+function finish(state,winner,reason){
+  state.over=true;state.winner=winner;state.endReason=reason;
+}
+
+// Checked after Black's turn so both sides always get equal turns.
+function checkRoundEnd(state){
+  const w=state.points.white,b=state.points.black,t=state.target;
+  if(w<t&&b<t)return;
+  if(w!==b){
+    const winner=w>b?"white":"black";
+    finish(state,winner,`${cap(winner)} reached ${Math.max(w,b)} points.`);
+    return;
+  }
+  const mode=MODES[state.mode];
+  const tb=mode.tieBreak?mode.tieBreak(state):{winner:fieldOwner(state,BIG_FIELD),why:"holding the 7×7"};
+  if(tb.winner)finish(state,tb.winner,`Tied at ${w}. ${cap(tb.winner)} wins the tiebreaker by ${tb.why}.`);
+}
+
+/* ---------- Emperor mode setup (hidden Emperor placement) ---------- */
+
+const homeField=color=>color==="white"?0:4;
+
+// A square can be flanked only if some axis has a square on BOTH sides of it.
+// (Board-edge corners can't be flanked, so a piece there can never be captured by a bracket.)
+function isFlankable(state,sq){
+  return[[[1,0],[-1,0]],[[0,1],[0,-1]]].some(axis=>axis.every(([dy,dx])=>!!step(state,sq,dy,dx)));
+}
+
+// An Emperor needs a flank axis whose two squares both exist AND can themselves be flanked.
+// Otherwise a defender could fill a neighbouring corner with a piece that can never be
+// captured, and the Emperor could never be bracketed (a permanent lock).
+function hasFlankAxis(state,sq){
+  return[[[1,0],[-1,0]],[[0,1],[0,-1]]].some(axis=>axis.every(([dy,dx])=>{
+    const n=step(state,sq,dy,dx);
+    return !!n&&isFlankable(state,n);
+  }));
+}
+
+// Each side may place its Emperor in its own 3×3 or its own 5×5; the 7×7 is off limits.
+const emperorFields=color=>color==="white"?[0,1]:[4,3];
+
+function canPlaceEmperor(state,color,sq){
+  return state.phase==="setup"&&emperorFields(color).includes(sq.f)&&inside(sq.f,sq.r,sq.c)&&!rawAt(state,sq)&&
+    (!EMPEROR_CAPTURABLE_ONLY||hasFlankAxis(state,sq));
+}
+
+// Put both chosen Emperors on the board and start play.
+function revealEmperors(state){
+  for(const color of["white","black"]){
+    let sq=state.picks&&state.picks[color];
+    if(!sq||!canPlaceEmperor(state,color,sq))sq={f:homeField(color),...EMPEROR_START};
+    state.fields[sq.f].grid[sq.r][sq.c]={color,kind:"emperor"};
+  }
+  state.phase="play";
+}
+
+// Computer's secret pick: uses only its own side of the board, never the opponent's pick.
+function chooseEmperorSquare(state,color,level="normal"){
+  const options=[];
+  for(const f of emperorFields(color))
+    state.fields[f].grid.forEach((row,r)=>row.forEach((p,c)=>{
+      if(canPlaceEmperor(state,color,{f,r,c}))options.push({f,r,c});
+    }));
+  if(level==="easy"||level==="dummy")return options[Math.floor(Math.random()*options.length)];
+  let best=null,bestScore=-Infinity;
+  for(const sq of options){
+    let v=Math.random()*.5+(sq.f===homeField(color)?.8:0);     // the 3×3 is the safer, further-back choice
+    for(const[dy,dx] of ORTHO){
+      const n=step(state,sq,dy,dx);
+      if(!n)v+=1.2;                              // board edge: no flank possible on that axis
+      else{const q=at(state,n);if(q&&q.color===color)v+=1}
+    }
+    if(v>bestScore){bestScore=v;best=sq}
+  }
+  return best;
+}
+
+/* ---------- repetition ---------- */
+
+// Same pieces + same side to move (+ same score in Hill mode) = same position.
+function positionKey(state){
+  const grid=state.fields.map(f=>f.grid.map(row=>
+    row.map(p=>p&&!p.removing?p.color[0]+p.kind[0]:".").join("")).join("/")).join("|");
+  const pts=MODES[state.mode].usesPoints?`${state.points.white},${state.points.black}`:"";
+  return`${state.turn}|${pts}|${state.marshalUsed.white?1:0}${state.marshalUsed.black?1:0}|${grid}`;
+}
+function declareDraw(state,reason){
+  state.over=true;state.winner=null;state.endReason=reason;
+}
+
+/* ---------- applying a move ---------- */
+
+// Mutates `state`. Captured pieces are flagged `removing` (already excluded
+// from influence and legality) and stay on the grid until settle().
+function applyMove(state,move){
+  const color=state.turn,foe=other(color);
+  const result={color,move,captured:[],landed:null,gained:0,touched:[]};
+  const lost=[];                 // kinds of pieces captured by this move
+
+  if(move.type==="place"){
+    const sq={f:move.f,r:move.r,c:move.c};
+    state.fields[sq.f].grid[sq.r][sq.c]={color,kind:move.kind};
+    if(move.kind==="marshal")state.marshalUsed[color]=true;
+    result.touched=[keyOf(sq)];
+  }else if(move.type==="marshalMove"){
+    const moving=at(state,move.from),victim=at(state,move.to);
+    state.fields[move.from.f].grid[move.from.r][move.from.c]=null;
+    state.fields[move.to.f].grid[move.to.r][move.to.c]=moving;
+    if(victim){result.landed=keyOf(move.to);lost.push(victim.kind)}
+    result.touched=[keyOf(move.from),keyOf(move.to)];
+  }else if(move.type==="rotate"){
+    rotateField(state,move.f,move.dir);
+  }
+
+  capturesForMove(state,move,color).forEach(sq=>{
+    const p=rawAt(state,sq);
+    if(p&&!p.removing){p.removing=true;result.captured.push(keyOf(sq));lost.push(p.kind)}
+  });
+
+  const mode=MODES[state.mode];
+  mode.afterCaptures(state,color,lost);
+
+  if(!state.over&&mode.squireLoss!==false&&countPieces(state,foe,"squire")===0)
+    finish(state,color,`${cap(foe)} has no Squires left.`);
+
+  if(!state.over)mode.endTurn(state,color,result);
+
+  state.turn=foe;
+  state.ply++;
+  if(!state.over&&!hasLegalMove(state,foe))
+    finish(state,color,`${cap(foe)} has no legal move.`);
+  return result;
+}
+
+// Remove pieces flagged by captures.
+function settle(state){
+  state.fields.forEach(field=>field.grid.forEach(row=>row.forEach((p,c)=>{
+    if(p&&p.removing)row[c]=null;
+  })));
+}
+
+/* ---------- AI ---------- */
+
+function placementMobility(state,color){
+  let total=0;
+  state.fields.forEach((field,f)=>field.grid.forEach((row,r)=>row.forEach((_,c)=>{
+    const sq={f,r,c};
+    if(at(state,sq))return;
+    if(ORTHO.some(([dy,dx])=>{const n=step(state,sq,dy,dx);return n&&at(state,n)?.color===color}))total++;
+  })));
+  return Math.min(total,30);
+}
+
+// Value of enemy pieces `color` could capture right now by dropping a Knight.
+function captureThreat(state,color){
+  let threat=0;
+  state.fields.forEach((field,f)=>field.grid.forEach((row,r)=>row.forEach((_,c)=>{
+    const sq={f,r,c};
+    if(at(state,sq))return;
+    linesFrom(state,sq,color).forEach(line=>
+      line.run.forEach(s=>{threat+=PIECE_VALUE[at(state,s).kind]}));
+  })));
+  return Math.min(threat,20);
+}
+
+// Positive = good for `me`.
+function evaluate(state,me="black"){return MODES[state.mode].evaluate(state,me)}
+
+function evaluateHill(state,me="black"){
+  const foe=other(me);
+  if(state.winner)return state.winner===me?10000:-10000;
+  let material=0;
+  eachPiece(state,p=>{material+=(p.color===me?1:-1)*STRATEGIC_VALUE[p.kind]});
+  const rate=fieldPoints(state,me)-fieldPoints(state,foe);
+  const bank=state.points[me]-state.points[foe];
+  const big=fieldOwner(state,BIG_FIELD);
+  const bigBonus=big===me?1.5:big===foe?-1.5:0;
+  const mobility=placementMobility(state,me)-placementMobility(state,foe);
+  const threats=captureThreat(state,me)-captureThreat(state,foe);
+  const danger=n=>n>=4?0:(4-n)*(4-n)*.5;      // few Squires left = near elimination
+  const safety=danger(countPieces(state,foe,"squire"))-danger(countPieces(state,me,"squire"));
+  return material*.5+rate*1.6+bank+bigBonus+mobility*.055+threats*.16+safety;
+}
+
+// Emperor mode: how hard `attacker` is leaning on the enemy Emperor.
+// An enemy piece orthogonally beside the Emperor with the opposite square open is a
+// one-move threat (a Knight dropped opposite captures it).
+function emperorPressure(state,attacker){
+  const foe=other(attacker),E=findPieces(state,foe,"emperor")[0];
+  if(!E)return 0;
+  let pressure=0;
+  for(const axis of[[[1,0],[-1,0]],[[0,1],[0,-1]]]){
+    const sides=axis.map(([dy,dx])=>{const n=step(state,E,dy,dx);return n?at(state,n):undefined});
+    if(sides.includes(undefined))continue;                      // board edge: can't be flanked on this axis
+    const mine=sides.filter(x=>x&&x.color===attacker).length;
+    const open=sides.filter(x=>x===null).length;
+    if(mine===1&&open===1)pressure+=4;else if(mine===1)pressure+=1;
+  }
+  const g=globalPos(state,E);let near=0;
+  eachPiece(state,(p,f,r,c)=>{
+    if(p.color!==attacker)return;
+    const q=globalPos(state,{f,r,c});
+    if(Math.max(Math.abs(q.x-g.x),Math.abs(q.y-g.y))<=2)near++;
+  });
+  return pressure+Math.min(near,8)*.3;
+}
+
+// Plurality: like Hill, plus credit for progress toward each field's half-the-board threshold.
+function evaluatePlurality(state,me="black"){
+  const foe=other(me);
+  if(state.winner)return state.winner===me?10000:-10000;
+  let material=0;
+  eachPiece(state,p=>{material+=(p.color===me?1:-1)*STRATEGIC_VALUE[p.kind]});
+  const rate=fieldPoints(state,me)-fieldPoints(state,foe);
+  const bank=state.points[me]-state.points[foe];
+  let progress=0;
+  for(let f=0;f<SIZES.length;f++){
+    const i=fieldInfluence(state,f),need=fieldThreshold(f);
+    progress+=FIELD_VALUE[f]*(Math.min(i[me],need)-Math.min(i[foe],need))/need;
+  }
+  const big=fieldOwner(state,BIG_FIELD);
+  const bigBonus=big===me?1.5:big===foe?-1.5:0;
+  const mobility=placementMobility(state,me)-placementMobility(state,foe);
+  const threats=captureThreat(state,me)-captureThreat(state,foe);
+  const danger=n=>n>=4?0:(4-n)*(4-n)*.5;
+  const safety=danger(countPieces(state,foe,"squire"))-danger(countPieces(state,me,"squire"));
+  return material*.3+rate*1.6+bank+progress*2.5+bigBonus+mobility*.04+threats*.14+safety;
+}
+
+// Chebyshev distance from `attacker`'s nearest non-Emperor piece to the enemy Emperor.
+function nearestToEmperor(state,attacker){
+  const E=findPieces(state,other(attacker),"emperor")[0];
+  if(!E)return 0;
+  const g=globalPos(state,E);let best=99;
+  eachPiece(state,(p,f,r,c)=>{
+    if(p.color!==attacker||p.kind==="emperor")return;
+    const q=globalPos(state,{f,r,c});
+    best=Math.min(best,Math.max(Math.abs(q.x-g.x),Math.abs(q.y-g.y)));
+  });
+  return best;
+}
+
+function evaluateEmperor(state,me="black"){
+  const foe=other(me);
+  if(state.winner)return state.winner===me?10000:-10000;
+  let material=0;
+  eachPiece(state,p=>{material+=(p.color===me?1:-1)*STRATEGIC_VALUE[p.kind]});
+  const pressure=emperorPressure(state,me)-emperorPressure(state,foe);
+  const approach=nearestToEmperor(state,foe)-nearestToEmperor(state,me);   // closer to their Emperor is better
+  const mobility=placementMobility(state,me)-placementMobility(state,foe);
+  const threats=captureThreat(state,me)-captureThreat(state,foe);
+  return material*.25+pressure*1.5+approach*1.2+mobility*.02+threats*.12;
+}
+
+const AI_TUNING={passPenalty:6};     // Emperor mode: cost of a rotation that captures nothing
+
+function pickNear(scored,margin){
+  const top=scored[0].value;
+  const pool=scored.filter(s=>s.value>=top-margin);
+  return pool[Math.floor(Math.random()*pool.length)].move;
+}
+
+// Every legal move applied to a copy and scored 1-ply, best first.
+function scoreMoves(state,color,moves){
+  const scored=moves.map(move=>{
+    const next=cloneState(state);
+    const res=applyMove(next,move);
+    settle(next);
+    let value=evaluate(next,color);
+    // Emperor mode has no points, so a rotation that captures nothing is just a free pass: discourage it.
+    if(state.mode==="emperor"&&move.type==="rotate"&&!res.captured.length)value-=AI_TUNING.passPenalty;
+    if(move.type==="place"&&move.kind==="marshal"&&state.ply<8)value-=1;
+    return{move,next,value};
+  });
+  scored.sort((a,b)=>b.value-a.value);
+  return scored;
+}
+
+// Negamax with alpha-beta and a narrow beam. Scores are from `toMove`'s point of view.
+const OPT={depth:3,rootBeam:10,beam:6,budgetMs:1800,repeatPenalty:2.5};
+function negamax(state,toMove,depth,alpha,beta,deadline){
+  const moves=legalMoves(state,toMove);
+  if(!moves.length)return evaluate(state,toMove);
+  const kids=moves.map(move=>{
+    const n=cloneState(state);applyMove(n,move);settle(n);
+    return{n,v:evaluate(n,toMove)};
+  });
+  if(depth<=1)return Math.max(...kids.map(k=>k.v));
+  kids.sort((a,b)=>b.v-a.v);
+  let best=-Infinity;
+  for(const k of kids.slice(0,OPT.beam)){
+    const v=k.n.over?k.v:-negamax(k.n,other(toMove),depth-1,-beta,-alpha,deadline);
+    if(v>best)best=v;
+    if(best>alpha)alpha=best;
+    if(alpha>=beta||Date.now()>deadline)break;
+  }
+  return best;
+}
+
+function chooseOptimized(state,color,scored,seen){
+  const deadline=Date.now()+OPT.budgetMs;
+  let best=null,bestValue=-Infinity;
+  for(const cand of scored.slice(0,OPT.rootBeam)){
+    let v;
+    if(cand.next.over)v=cand.value;
+    else v=-negamax(cand.next,other(color),OPT.depth-1,-Infinity,Infinity,deadline);
+    // Avoid walking into a repeated position (draw by repetition) unless nothing else is better.
+    if(seen)v-=OPT.repeatPenalty*(seen.get(positionKey(cand.next))||0);
+    v+=Math.random()*.02;
+    if(v>bestValue){bestValue=v;best=cand.move}
+    if(best&&Date.now()>deadline)break;
+  }
+  return best||scored[0].move;
+}
+
+// level "dummy": random legal move (testing).
+// level "easy": best 1-ply move (random among near-ties).
+// level "normal": 2-ply, checks the opponent's best reply for the top candidates.
+// level "optimized": 3-ply alpha-beta with a time budget; avoids repeating positions.
+// `seen` = Map of positionKey -> times seen (optional).
+function chooseAI(state,level="normal",color=state.turn,seen=null){
+  const moves=legalMoves(state,color);
+  if(!moves.length)return null;
+  if(level==="dummy")return moves[Math.floor(Math.random()*moves.length)];
+  const scored=scoreMoves(state,color,moves);
+  if(level==="easy")return pickNear(scored,.12);
+  if(level==="optimized")return chooseOptimized(state,color,scored,seen);
+
+  const candidates=scored.slice(0,8);
+  candidates.forEach(cand=>{
+    if(cand.next.over)return;
+    let worst=Infinity;
+    for(const reply of legalMoves(cand.next,other(color))){
+      const after=cloneState(cand.next);
+      applyMove(after,reply);
+      settle(after);
+      worst=Math.min(worst,evaluate(after,color));
+    }
+    if(worst<Infinity)cand.value=worst*.8+cand.value*.2;
+  });
+  candidates.sort((a,b)=>b.value-a.value);
+  return pickNear(candidates,.05);
+}
+
+/* ---------- rule tests ---------- */
+
+function runRuleTests(){
+  const results=[];
+  const check=(name,ok)=>results.push(`${ok?"PASS":"FAIL"} — ${name}`);
+  const blank=(layoutName="straight",target=DEFAULT_TARGET)=>newState({layoutName,target});
+  const put=(s,f,r,c,color,kind)=>{s.fields[f].grid[r][c]={color,kind}};
+  const putG=(s,x,y,color,kind)=>{const sq=squareAt(s,x,y);put(s,sq.f,sq.r,sq.c,color,kind);return sq};
+  const W="white",B="black";
+  const hasLegalMoveOfType=(st,color,kind)=>legalMoves(st,color).some(m=>m.type===kind||m.type==="place"&&m.kind===kind);
+
+  // ----- layouts -----
+  for(const name of Object.keys(LAYOUTS)){
+    const pos=LAYOUTS[name].positions;
+    const W_=Math.max(...pos.map((p,i)=>p.x+SIZES[i])),H_=Math.max(...pos.map((p,i)=>p.y+SIZES[i]));
+    check(`${name}: layout is 180° point-symmetric`,
+      pos.every((p,i)=>{const q=pos[4-i];return q.x===W_-p.x-SIZES[i]&&q.y===H_-p.y-SIZES[i]}));
+
+    const s=createGame({layoutName:name});
+    const cells=new Set();let overlap=false;
+    s.fields.forEach((_,f)=>{for(let r=0;r<SIZES[f];r++)for(let c=0;c<SIZES[f];c++){
+      const g=globalPos(s,{f,r,c}),k=`${g.x}:${g.y}`;if(cells.has(k))overlap=true;cells.add(k)}});
+    check(`${name}: fields do not overlap`,!overlap);
+
+    const touches=(a,b)=>{
+      for(let r=0;r<SIZES[a];r++)for(let c=0;c<SIZES[a];c++)
+        for(const[dy,dx] of ORTHO){const n=step(s,{f:a,r,c},dy,dx);if(n&&n.f===b)return true}
+      return false};
+    check(`${name}: neighbouring fields in the chain touch`,
+      [[0,1],[1,2],[2,3],[3,4]].every(([a,b])=>touches(a,b)));
+    check(`${name}: homes touch the 7×7 only in the block layout`,
+      (touches(0,2)&&touches(4,2))===(name==="block")&&(touches(0,2)===touches(4,2)));
+
+    // starting roads are point-symmetric and equidistant from the 7x7
+    const roadW=findPieces(s,W,"squire").map(q=>globalPos(s,q)),roadB=findPieces(s,B,"squire").map(q=>globalPos(s,q));
+    const mirrored=roadW.map(g=>`${W_-1-g.x}:${H_-1-g.y}`).sort().join("|");
+    check(`${name}: starting roads mirror each other`,mirrored===roadB.map(g=>`${g.x}:${g.y}`).sort().join("|"));
+
+    const dist=(color)=>{
+      let frontier=findPieces(s,color,"squire");
+      const seen=new Set(frontier.map(keyOf));
+      let d=0;
+      while(frontier.length){
+        if(frontier.some(q=>q.f===BIG_FIELD))return d;
+        const nxt=[];
+        frontier.forEach(q=>ORTHO.forEach(([dy,dx])=>{const n=step(s,q,dy,dx);
+          if(n&&!seen.has(keyOf(n))){seen.add(keyOf(n));nxt.push(n)}}));
+        frontier=nxt;d++;
+      }
+      return -1;};
+    check(`${name}: both homes are the same distance from the 7×7`,dist(W)===dist(B));
+  }
+  check("Field values are 1/2/3/2/1",FIELD_VALUE.join()==="1,2,3,2,1");
+  check("Default target is 100",DEFAULT_TARGET===100&&newState().target===100);
+
+  // ----- Squires -----
+  let s=blank();
+  put(s,2,3,3,W,"marshal");
+  check("Squire may be placed orthogonally beside a Marshal",canPlace(s,"squire",2,3,4,W));
+  check("Squire may not be placed diagonally only",!canPlace(s,"squire",2,4,4,W));
+
+  // ----- Knights -----
+  s=blank();put(s,2,3,0,W,"squire");put(s,2,3,4,W,"squire");
+  check("Knight cannot be placed without a capture",!canPlace(s,"knight",2,3,5,W)&&!canPlace(s,"knight",2,2,0,W));
+
+  s=blank();put(s,2,3,0,W,"squire");put(s,2,3,1,B,"squire");
+  check("Knight can be placed to flank against a Squire",canPlace(s,"knight",2,3,2,W));
+  let r=applyMove(s,{type:"place",kind:"knight",f:2,r:3,c:2});
+  check("Knight placement captures the flanked piece",r.captured.length===1&&s.fields[2].grid[3][1].removing===true);
+
+  s=blank();put(s,2,3,0,W,"knight");put(s,2,3,1,B,"squire");
+  check("Knight can flank together with another Knight",canPlace(s,"knight",2,3,2,W));
+  r=applyMove(s,{type:"place",kind:"knight",f:2,r:3,c:2});
+  check("Knight–Knight flank captures",r.captured.length===1);
+  s=blank();put(s,2,3,0,W,"marshal");put(s,2,3,1,B,"squire");
+  check("Knight can flank together with a Marshal",canPlace(s,"knight",2,3,2,W));
+
+  s=blank();put(s,2,3,0,W,"knight");put(s,2,3,1,B,"squire");put(s,2,2,2,W,"squire");
+  r=applyMove(s,{type:"place",kind:"squire",f:2,r:3,c:2});
+  check("A placed Knight still anchors a Squire's flank",r.captured.length===1);
+
+  s=blank();putG(s,7,3,W,"squire");putG(s,8,3,B,"squire");putG(s,9,3,B,"knight");
+  const sq=squareAt(s,10,3);
+  check("Knight flank works across a field seam",canPlace(s,"knight",sq.f,sq.r,sq.c,W));
+  r=applyMove(s,{type:"place",kind:"knight",f:sq.f,r:sq.r,c:sq.c});
+  check("Seam flank captures the whole run",r.captured.length===2);
+
+  // ----- Marshal -----
+  s=blank();put(s,2,3,0,W,"marshal");put(s,2,3,1,B,"squire");put(s,2,2,2,W,"squire");
+  r=applyMove(s,{type:"place",kind:"squire",f:2,r:3,c:2});
+  check("Marshal acts as a flank anchor",r.captured.length===1);
+
+  s=blank();put(s,2,4,1,W,"marshal");put(s,2,3,2,B,"squire");put(s,2,3,3,W,"squire");
+  r=applyMove(s,{type:"marshalMove",from:{f:2,r:4,c:1},to:{f:2,r:3,c:1}});
+  check("Marshal moving into position flanks",r.captured.length===1);
+
+  s=blank();put(s,2,3,3,W,"marshal");put(s,2,3,4,B,"squire");put(s,2,2,3,W,"squire");
+  const targets=marshalTargets(s,{f:2,r:3,c:3},W);
+  check("Marshal moves within its 3×3 (8 squares minus friendly)",targets.length===7);
+  check("Marshal cannot move 2 squares",!targets.some(t=>t.c===5||t.c===1||t.r===5||t.r===1));
+  r=applyMove(s,{type:"marshalMove",from:{f:2,r:3,c:3},to:{f:2,r:3,c:4}});
+  check("Marshal captures an enemy by moving onto it",r.landed&&s.fields[2].grid[3][4].kind==="marshal");
+  s=blank();put(s,2,0,0,W,"marshal");
+  check("Marshal in a corner has 3 moves",marshalTargets(s,{f:2,r:0,c:0},W).length===3);
+
+  s=blank();put(s,2,0,0,W,"squire");put(s,2,0,1,W,"squire");
+  check("Marshal needs three Squires on the field",!canPlace(s,"marshal",2,5,5,W));
+  put(s,2,0,2,W,"squire");
+  check("Marshal deploys on any empty square of a field with 3 Squires",canPlace(s,"marshal",2,5,5,W));
+  check("Marshal cannot be placed on an occupied square",!canPlace(s,"marshal",2,0,0,W));
+  s.marshalUsed.white=true;
+  check("Only one Marshal per game",!canPlace(s,"marshal",2,5,5,W));
+
+  // ----- Safe entry -----
+  s=blank();put(s,2,3,1,B,"squire");put(s,2,3,3,B,"squire");put(s,2,2,2,W,"squire");
+  applyMove(s,{type:"place",kind:"squire",f:2,r:3,c:2});   // White steps between two Black pieces
+  applyMove(s,{type:"place",kind:"squire",f:2,r:4,c:3});   // Black plays an unrelated move
+  check("A piece placed into a sandwich is not captured by an unrelated move",
+    s.fields[2].grid[3][2]&&!s.fields[2].grid[3][2].removing);
+
+  // ----- Rotation -----
+  s=blank();put(s,0,0,0,W,"squire");rotateField(s,0,1);
+  check("Rotate right is clockwise (top-left goes to top-right)",!!s.fields[0].grid[0][2]);
+  rotateField(s,0,-1);
+  check("Rotate left undoes rotate right",!!s.fields[0].grid[0][0]);
+
+  s=blank();putG(s,7,3,W,"squire");
+  put(s,2,6,3,B,"squire");put(s,2,5,3,B,"squire");put(s,2,4,3,W,"squire");
+  r=applyMove(s,{type:"rotate",f:2,dir:1});
+  check("Rotating a field can capture (rotated into a flank across the seam)",r.captured.length===2);
+
+  s=blank();put(s,2,4,3,W,"squire");put(s,2,6,3,B,"squire");
+  r=applyMove(s,{type:"rotate",f:2,dir:1});
+  check("Rotation without a flank captures nothing",r.captured.length===0);
+
+  s=blank();put(s,2,3,3,W,"squire");put(s,2,3,2,B,"squire");put(s,2,3,4,B,"squire");
+  s.turn=B;
+  put(s,2,0,0,B,"squire");
+  check("Rotation needs a Squire on the field",!canRotate(s,1,W)&&canRotate(s,2,W));
+  put(s,2,1,1,B,"marshal");
+  check("Enemy Marshal blocks rotation",!canRotate(s,2,W)&&canRotate(s,2,B));
+
+  // ----- Scoring -----
+  s=blank();put(s,1,0,0,W,"squire");put(s,2,0,0,W,"squire");
+  check("White holding the 5×5 and 7×7 earns 2+3 per turn",fieldPoints(s,W)===5);
+  put(s,2,0,1,B,"marshal");
+  check("Marshal counts as two influence (flips the 7×7)",fieldOwner(s,2)===B&&fieldPoints(s,W)===2);
+
+  s=blank();put(s,2,3,3,W,"squire");put(s,4,0,0,B,"squire");s.turns.white=2;
+  applyMove(s,{type:"place",kind:"squire",f:2,r:3,c:2});
+  check("White banks nothing on its turn 3",s.points.white===0);
+  s.turn=W;applyMove(s,{type:"place",kind:"squire",f:2,r:3,c:4});
+  check("White banks the 7×7 value (3) on its turn 4",s.points.white===3);
+
+  s=blank();put(s,0,0,0,B,"squire");put(s,2,6,6,W,"squire");s.turns.black=1;s.turn=B;
+  applyMove(s,{type:"place",kind:"squire",f:0,r:1,c:0});
+  check("Black banks nothing on its turn 2",s.points.black===0);
+  s.turn=B;applyMove(s,{type:"place",kind:"squire",f:0,r:2,c:0});
+  check("Black banks the 3×3 value (1) on its turn 3",s.points.black===1);
+
+  s=blank("straight",51);put(s,2,3,3,W,"squire");put(s,0,0,0,B,"squire");put(s,4,0,0,B,"squire");
+  s.points.white=51;s.points.black=47;s.turns.black=2;s.turn=B;
+  applyMove(s,{type:"place",kind:"squire",f:0,r:1,c:0});   // +1 (3x3). 4x? black holds 3x3s: 1+1 = 2
+  check("Target reached: higher total wins at the end of the round",s.over&&s.winner===W);
+
+  s=blank("straight",51);put(s,2,3,3,W,"squire");put(s,0,0,0,B,"squire");put(s,4,0,0,B,"squire");
+  s.points.white=51;s.points.black=49;s.turns.black=2;s.turn=B;
+  applyMove(s,{type:"place",kind:"squire",f:0,r:1,c:0});   // Black banks 2 -> tie at 51
+  check("Tie at the target goes to the 7×7 holder",s.over&&s.winner===W&&s.points.black===51);
+
+  s=blank("straight",75);put(s,2,3,3,W,"squire");put(s,0,0,0,B,"squire");
+  s.points.white=51;s.points.black=50;s.turns.black=2;s.turn=B;
+  applyMove(s,{type:"place",kind:"squire",f:0,r:1,c:0});
+  check("At a 75 target, 51 points does not end the game",!s.over);
+
+  // ----- Elimination -----
+  s=blank();put(s,2,3,1,W,"squire");put(s,2,3,0,B,"squire");put(s,2,2,2,B,"squire");s.turn=B;
+  r=applyMove(s,{type:"place",kind:"squire",f:2,r:3,c:2});
+  check("Capturing a player's last Squire wins immediately",s.over&&s.winner===B&&/no Squires/.test(s.endReason));
+
+  s=blank();put(s,2,3,1,W,"squire");put(s,2,3,0,B,"marshal");put(s,2,2,2,B,"squire");s.turn=B;
+  put(s,2,5,5,B,"squire");
+  applyMove(s,{type:"marshalMove",from:{f:2,r:3,c:0},to:{f:2,r:3,c:1}});
+  check("Marshal landing on a last Squire wins immediately",s.over&&s.winner===B);
+
+  // ----- Emperor -----
+  const emperorGame=(layoutName="straight")=>createGame({layoutName,mode:"emperor"});
+  const emperorBlank=()=>newState({mode:"emperor"});
+  for(const name of Object.keys(LAYOUTS)){
+    const g=emperorGame(name);
+    check(`${name}: Emperor mode places one Emperor per side at the home centre`,
+      findPieces(g,W,"emperor").length===1&&findPieces(g,B,"emperor").length===1&&
+      g.fields[0].grid[1][1].kind==="emperor"&&g.fields[4].grid[1][1].kind==="emperor");
+  }
+  check("Hill mode has no Emperors",findPieces(createGame(),W,"emperor").length===0);
+  let g=emperorGame();
+  check("Emperor never appears as a legal placement or move",
+    legalMoves(g,W).every(m=>m.type==="rotate"||m.type==="place"&&m.kind!=="emperor"));
+  const rot=cloneState(g);rotateField(rot,0,1);
+  check("Rotating the home field leaves the Emperor on its square",rot.fields[0].grid[1][1].kind==="emperor");
+
+  s=emperorBlank();put(s,2,3,3,B,"emperor");put(s,2,3,2,W,"squire");put(s,2,2,4,W,"squire");put(s,4,0,0,B,"squire");
+  put(s,2,4,3,W,"squire");put(s,2,3,4,W,"squire");
+  r=applyMove(s,{type:"place",kind:"squire",f:2,r:2,c:3});
+  check("Emperor mode: capturing the Emperor by flank ends the game immediately",s.over&&s.winner===W&&/Emperor/.test(s.endReason));
+
+  s=emperorBlank();put(s,2,3,3,B,"emperor");put(s,2,3,2,W,"squire");put(s,4,0,0,B,"squire");
+  check("Emperor mode: a Knight may be dropped opposite a piece beside the Emperor",canPlace(s,"knight",2,3,4,W));
+  r=applyMove(s,{type:"place",kind:"knight",f:2,r:3,c:4});
+  check("Emperor mode: Knight flank capturing the Emperor wins",s.over&&s.winner===W);
+
+  s=emperorBlank();put(s,2,3,3,W,"marshal");put(s,2,3,4,B,"emperor");put(s,0,0,0,W,"squire");put(s,4,0,0,B,"squire");
+  r=applyMove(s,{type:"marshalMove",from:{f:2,r:3,c:3},to:{f:2,r:3,c:4}});
+  check("Emperor mode: Marshal landing on the Emperor wins",s.over&&s.winner===W);
+
+  s=emperorBlank();put(s,2,3,0,W,"emperor");put(s,2,3,1,B,"squire");put(s,2,2,2,W,"squire");put(s,4,0,0,B,"squire");
+  r=applyMove(s,{type:"place",kind:"squire",f:2,r:3,c:2});
+  check("Emperor acts as a flank anchor (captures an enemy Squire)",r.captured.length===1&&!s.over);
+
+  s=emperorGame();
+  check("Emperor mode scores no points",(()=>{const c=cloneState(s);applyMove(c,legalMoves(c,W)[0]);return c.points.white===0&&c.points.black===0})());
+  s=emperorBlank();put(s,0,1,1,W,"emperor");put(s,0,0,0,W,"squire");put(s,2,3,2,B,"squire");put(s,2,3,4,W,"squire");put(s,2,3,3,B,"squire");
+  s.turn=B;applyMove(s,{type:"place",kind:"squire",f:2,r:4,c:3});
+  check("Emperor mode: the game continues while both sides have Squires",s.over===false);
+  s=emperorBlank();put(s,0,1,1,W,"emperor");put(s,2,3,1,W,"squire");put(s,2,3,0,B,"squire");put(s,2,2,2,B,"squire");
+  s.turn=B;applyMove(s,{type:"place",kind:"squire",f:2,r:3,c:2});
+  check("Emperor mode: losing every Squire does NOT end the game (the Emperor is the objective)",!s.over);
+
+  // rotation lock is a per-mode switch
+  s=emperorBlank();put(s,2,3,3,W,"squire");put(s,2,0,0,B,"marshal");
+  const lockWas=MODES.emperor.marshalLocksRotation;
+  MODES.emperor.marshalLocksRotation=true;const locked=!canRotate(s,2,W);
+  MODES.emperor.marshalLocksRotation=false;const free=canRotate(s,2,W);
+  MODES.emperor.marshalLocksRotation=lockWas;
+  check("Marshal rotation lock can be switched per mode",locked&&free);
+
+  // ----- Setup phase (Emperor) -----
+  s=createGame({mode:"emperor",emperorSetup:true});
+  check("Emperor setup starts in the setup phase with no Emperors on the board",
+    s.phase==="setup"&&findPieces(s,W,"emperor").length===0&&findPieces(s,B,"emperor").length===0);
+  check("Emperor may go on an empty home-field square",canPlaceEmperor(s,W,{f:0,r:1,c:1})&&canPlaceEmperor(s,B,{f:4,r:0,c:0}));
+  check("Emperor cannot go on an occupied square, the other home field, or another field",
+    !canPlaceEmperor(s,W,{f:0,r:0,c:0})&&!canPlaceEmperor(s,W,{f:4,r:1,c:1})&&!canPlaceEmperor(s,W,{f:2,r:3,c:3}));
+  s.picks.white={f:0,r:2,c:2};s.picks.black={f:4,r:1,c:0};
+  check("Picks stay off the board until revealed",findPieces(s,W,"emperor").length===0);
+  revealEmperors(s);
+  check("Reveal places both Emperors on their chosen squares and starts play",
+    s.phase==="play"&&s.fields[0].grid[2][2].kind==="emperor"&&s.fields[4].grid[1][0].kind==="emperor");
+  const carried=cloneState(s);rotateField(carried,0,1);
+  check("Rotation carries a non-centre Emperor with its field",
+    findPieces(carried,W,"emperor").length===1&&!(carried.fields[0].grid[2][2]&&carried.fields[0].grid[2][2].kind==="emperor"));
+  check("AI Emperor pick is always a legal square",(()=>{
+    const g=createGame({mode:"emperor",emperorSetup:true});
+    return["easy","normal","optimized"].every(l=>canPlaceEmperor(g,B,chooseEmperorSquare(g,B,l)));})());
+
+  // ----- Repetition -----
+  s=blank();put(s,2,3,3,W,"squire");put(s,2,2,2,B,"squire");
+  const k0=positionKey(s);
+  applyMove(s,{type:"rotate",f:2,dir:1});
+  applyMove(s,{type:"rotate",f:2,dir:-1});
+  check("Rotating right then left restores the same position (same side to move)",positionKey(s)===k0);
+  check("Position key includes the side to move",positionKey(s)!==positionKey({...s,turn:other(s.turn)}));
+  s=blank();declareDraw(s,"test");
+  check("A draw ends the game with no winner",s.over&&s.winner===null);
+
+  // ----- Plurality (majority of the board) -----
+  check("Plurality thresholds are 5 / 13 / 25 (half the squares plus one)",fieldThreshold(0)===5&&fieldThreshold(1)===13&&fieldThreshold(2)===25&&fieldThreshold(3)===13&&fieldThreshold(4)===5);
+  const plur=()=>newState({mode:"plurality",target:15});
+  s=plur();for(let c=0;c<3;c++)put(s,0,0,c,W,"squire");put(s,0,1,0,W,"squire");
+  check("Plurality: 4 Squires in a 3×3 do not hold it",fieldOwner(s,0)===null);
+  put(s,0,1,1,W,"squire");
+  check("Plurality: 5 Squires hold the 3×3",fieldOwner(s,0)===W);
+  s=plur();put(s,0,0,0,W,"squire");put(s,0,0,1,W,"squire");put(s,0,1,0,W,"marshal");
+  check("Plurality: a Marshal counts 3 (2 Squires + Marshal = 5 holds the 3×3)",fieldInfluence(s,0).white===5&&fieldOwner(s,0)===W);
+  s=plur();put(s,0,0,0,W,"squire");put(s,0,0,1,W,"knight");put(s,0,0,2,W,"knight");
+  check("Plurality: a Knight counts 2 (1 + 2 + 2 = 5 holds the 3×3)",fieldInfluence(s,0).white===5&&fieldOwner(s,0)===W);
+  s=plur();for(let c=0;c<3;c++)put(s,0,0,c,W,"squire");put(s,0,1,0,W,"squire");put(s,0,1,1,W,"squire");
+  put(s,0,2,0,B,"knight");put(s,0,2,1,B,"knight");put(s,0,2,2,B,"marshal");
+  check("Plurality: if both reach the threshold, the higher presence holds it (Black 7 vs White 5)",fieldOwner(s,0)===B);
+  put(s,0,1,2,W,"knight");
+  check("Plurality: equal presence holds nothing (7 vs 7)",fieldInfluence(s,0).white===7&&fieldInfluence(s,0).black===7&&fieldOwner(s,0)===null);
+  s=newState({mode:"hill"});for(let c=0;c<3;c++)put(s,0,0,c,W,"squire");
+  check("King of the Hill is unchanged: plain majority of influence still holds a field (3 vs 0)",fieldOwner(s,0)===W);
+  s=plur();put(s,0,0,0,W,"squire");put(s,4,0,0,B,"squire");s.turns.white=3;
+  applyMove(s,{type:"place",kind:"squire",f:0,r:0,c:1});
+  check("Plurality: a field below its threshold earns nothing even on a scoring turn",s.points.white===0);
+  s=plur();for(let c=0;c<3;c++)put(s,0,0,c,W,"squire");put(s,0,1,0,W,"squire");put(s,4,0,0,B,"squire");s.turns.white=3;
+  applyMove(s,{type:"place",kind:"squire",f:0,r:1,c:1});
+  check("Plurality: once a field reaches its threshold it scores its value (3×3 = 1)",s.points.white===1);
+  s=newState({mode:"plurality",target:15});put(s,0,0,0,W,"squire");put(s,4,0,0,B,"squire");
+  check("Plurality position key includes the score (so scoring turns never repeat a position)",
+    positionKey(s)!==positionKey({...s,points:{white:1,black:0}}));
+  g=createGame({mode:"plurality"});
+  check("Plurality starts like King of the Hill (3-Squire road each, no Emperors)",findPieces(g,W,"squire").length===3&&findPieces(g,W,"emperor").length===0);
+  {let ok2=true;for(const level of["easy","normal","optimized"]){const m=chooseAI(cloneState(g),level,"white");ok2=ok2&&!!m&&legalMoves(g,"white").some(l=>JSON.stringify(l)===JSON.stringify(m))}
+   check("AI returns legal moves in Plurality at every level",ok2);}
+
+  check("Plurality scoring starts on turn 4 for both sides (Hill keeps 4 / 3)",
+    startTurnOf(newState({mode:"plurality"}),W)===4&&startTurnOf(newState({mode:"plurality"}),B)===4&&
+    startTurnOf(newState({mode:"hill"}),W)===4&&startTurnOf(newState({mode:"hill"}),B)===3);
+  s=newState({mode:"plurality",target:10});put(s,0,0,0,W,"squire");put(s,4,0,0,B,"squire");
+  s.points.white=10;s.points.black=10;s.turns.black=5;s.turn=B;
+  for(const c of[0,1,2])put(s,0,1,c,W,"squire");put(s,0,2,0,W,"squire");put(s,0,2,1,W,"squire");
+  applyMove(s,{type:"place",kind:"squire",f:4,r:0,c:1});
+  check("Plurality: a tie at the target goes to the side with more total presence on the board",s.over&&s.winner===W&&/more total presence/.test(s.endReason));
+  s=newState({mode:"plurality",target:10});for(const c of[0,1,2])put(s,0,0,c,W,"squire");put(s,4,0,0,B,"squire");put(s,4,0,1,B,"squire");
+  s.points.white=10;s.points.black=10;s.turns.black=5;s.turn=B;
+  applyMove(s,{type:"place",kind:"squire",f:4,r:0,c:2});
+  check("Plurality: equal presence at a tied target means play continues",!s.over);
+
+  // ----- Emperor start (Emperor only) and flank-immune squares -----
+  g=emperorGame();
+  check("Emperor start: no Squires on the board, only the Emperors",
+    findPieces(g,W,"squire").length===0&&findPieces(g,B,"squire").length===0&&countPieces(g,W)===1&&countPieces(g,B)===1);
+  check("Emperor start: White's only legal moves are Squires beside its Emperor",
+    legalMoves(g,W).length===4&&legalMoves(g,W).every(m=>m.type==="place"&&m.kind==="squire"));
+  check("Emperor start: no rotation or Marshal yet (needs Squires)",!hasLegalMoveOfType(g,W,"rotate")&&!hasLegalMoveOfType(g,W,"marshal"));
+  const immune={straight:2,zigzag:2,block:2};
+  for(const name of Object.keys(LAYOUTS)){
+    const gs=createGame({layoutName:name,mode:"emperor",emperorSetup:true});
+    let n=0;for(let r=0;r<3;r++)for(let c=0;c<3;c++)if(!isFlankable(gs,{f:0,r,c}))n++;
+    check(`${name}: exactly ${immune[name]} of White's 9 home squares can never be flanked`,n===immune[name]);
+
+    // Property: on every square where an Emperor may be placed, an attacker CAN bracket it,
+    // using two squares that are themselves flankable (so no permanent corner lock).
+    let allowedSquares=0,bad=0;
+    for(const color of[W,B])for(const f of emperorFields(color))
+      for(let r=0;r<SIZES[f];r++)for(let c=0;c<SIZES[f];c++){
+        const sq={f,r,c};
+        if(!canPlaceEmperor(gs,color,sq))continue;
+        allowedSquares++;
+        const foe=other(color);
+        const ok=[[[1,0],[-1,0]],[[0,1],[0,-1]]].some(([a,b])=>{
+          const n1=step(gs,sq,a[0],a[1]),n2=step(gs,sq,b[0],b[1]);
+          if(!n1||!n2||!isFlankable(gs,n1)||!isFlankable(gs,n2))return false;
+          const t=cloneState(gs);t.phase="play";
+          t.fields[f].grid[r][c]={color,kind:"emperor"};
+          t.fields[n1.f].grid[n1.r][n1.c]={color:foe,kind:"squire"};
+          return linesFrom(t,n2,foe).some(l=>l.run.length===1&&keyOf(l.run[0])===keyOf(sq));
+        });
+        if(!ok)bad++;
+      }
+    check(`${name}: every allowed Emperor square can really be bracketed (${allowedSquares} squares checked)`,allowedSquares>0&&bad===0);
+  }
+  {
+    const z=createGame({layoutName:"zigzag",mode:"emperor",emperorSetup:true});
+    check("Zig-zag: the corner-lock square from play-testing (Black row2,col3) is not allowed",!canPlaceEmperor(z,B,{f:4,r:1,c:2}));
+    check("Zig-zag: Black's immune corner and its centre square behave as expected",!canPlaceEmperor(z,B,{f:4,r:2,c:2})&&canPlaceEmperor(z,B,{f:4,r:1,c:1}));
+    const st=createGame({layoutName:"straight",mode:"emperor",emperorSetup:true});
+    check("Straight: the edge square between two immune corners is not allowed, the centre is",!canPlaceEmperor(st,W,{f:0,r:1,c:0})&&canPlaceEmperor(st,W,{f:0,r:1,c:1}));
+    check("Emperor may go in your own 5×5 (not the 7×7, not the enemy's fields)",
+      canPlaceEmperor(st,W,{f:1,r:2,c:2})&&canPlaceEmperor(st,B,{f:3,r:2,c:2})&&
+      !canPlaceEmperor(st,W,{f:2,r:3,c:3})&&!canPlaceEmperor(st,W,{f:3,r:2,c:2})&&!canPlaceEmperor(st,W,{f:4,r:1,c:1}));
+    st.picks.white={f:1,r:2,c:2};st.picks.black={f:3,r:2,c:2};revealEmperors(st);
+    check("An Emperor placed in a 5×5 appears there after the reveal",st.fields[1].grid[2][2].kind==="emperor"&&st.fields[3].grid[2][2].kind==="emperor");
+  }
+  s=createGame({mode:"emperor"});
+  {const gs=emperorBlank();
+   put(gs,0,0,2,W,"emperor");put(gs,0,1,1,W,"squire");put(gs,4,0,0,B,"squire");
+   check("Rotation that would carry an Emperor onto an uncapturable square is illegal",
+     !canRotate(gs,0,W,-1)&&canRotate(gs,0,W,1)&&canRotate(gs,0,W));
+   check("The illegal rotation is not offered as a move",
+     !legalMoves(gs,W).some(m=>m.type==="rotate"&&m.f===0&&m.dir===-1)&&legalMoves(gs,W).some(m=>m.type==="rotate"&&m.f===0&&m.dir===1));}
+
+  // ----- AI -----
+  s=createGame();
+  let ok=true;
+  for(const level of["easy","normal","optimized"]){
+    const m=chooseAI(cloneState(s),level,"white");
+    ok=ok&&!!m&&legalMoves(s,"white").some(l=>JSON.stringify(l)===JSON.stringify(m));
+  }
+  check("AI returns legal moves at both levels",ok);
+  s=emperorGame();ok=true;
+  for(const level of["dummy","easy","normal","optimized"]){
+    const m=chooseAI(cloneState(s),level,"white");
+    ok=ok&&!!m&&legalMoves(s,"white").some(l=>JSON.stringify(l)===JSON.stringify(m));
+  }
+  check("AI returns legal moves in Emperor mode (all levels)",ok);
+  s=emperorBlank();put(s,2,3,3,B,"emperor");put(s,2,3,2,W,"squire");put(s,4,0,0,B,"squire");put(s,0,0,0,W,"squire");
+  for(const level of["normal","optimized"]){
+    const winMove=chooseAI(s,level,"white");
+    check(`AI (${level}) takes an available Emperor capture`,winMove&&winMove.type==="place"&&winMove.kind==="knight"&&winMove.c===4);
+  }
+
+  return results;
+}
+//#ENGINE_END
+
+/* =====================================================================
+   UI
+   ===================================================================== */
+
+const $=id=>document.getElementById(id);
+const ui={action:null,selected:null,lastAction:{white:null,black:null},busy:false,animating:false,setupSide:null,
+  last:[],landed:[],log:[],history:[],positions:new Map(),message:""};
+let game;
+
+const GLYPH={
+  white:{squire:"♙\uFE0E",knight:"♘\uFE0E",marshal:"♖\uFE0E",emperor:"♔\uFE0E"},
+  black:{squire:"♟\uFE0E",knight:"♞\uFE0E",marshal:"♜\uFE0E",emperor:"♚\uFE0E"}
+};
+const TIPS={
+  squire:"Squire (pawn): place beside any of your pieces",
+  knight:"Knight: place only where it captures",
+  marshal:"Marshal (rook): deploy once, on a field where you have 3+ Squires",
+  marshalMove:"Marshal (rook): move one square; moving onto an enemy captures it",
+  emperor:"Emperor (king): placed once, during setup",
+  rotateLeft:"Rotate a field left (counter-clockwise)",
+  rotateRight:"Rotate a field right (clockwise)"
+};
+const HINTS={
+  squire:"Place Squire: click an empty square directly beside one of your pieces.",
+  knight:"Place Knight: click a highlighted square. It must capture.",
+  marshal:"Deploy Marshal: click any empty square on a field where you have 3+ Squires.",
+  marshalMove:"Move Marshal: click a highlighted square (red ring = capture).",
+  emperor:"Place your Emperor: click a highlighted square in your 3×3 or 5×5 field.",
+  rotateLeft:"Rotate Left: click any square on a highlighted field.",
+  rotateRight:"Rotate Right: click any square on a highlighted field."
+};
+
+const opponent=()=>$("opponent").value;
+const vsAI=()=>opponent()!=="human";
+const nameOf=color=>color==="black"&&vsAI()?"Black AI":cap(color);
+const activeColor=()=>game.phase==="setup"?ui.setupSide:game.turn;
+const isRotate=a=>a==="rotateLeft"||a==="rotateRight";
+function humanTurn(){
+  if(game.over||ui.busy||ui.animating)return false;
+  const c=activeColor();
+  return !!c&&(c==="white"||!vsAI());
+}
+
+function bounds(){
+  return LAYOUTS[game.layoutName].positions.reduce((out,p,i)=>({
+    cols:Math.max(out.cols,p.x+SIZES[i]),rows:Math.max(out.rows,p.y+SIZES[i])}),{cols:0,rows:0});
+}
+function computeCell(){
+  const fit=Math.floor(($("workspaceWrap").clientWidth-42)/bounds().cols);
+  return Math.max(30,Math.min(46,fit||46));
+}
+const squareLabel=sq=>`${FIELD_NAMES[sq.f]} row ${sq.r+1} col ${sq.c+1}`;
+
+function actionAvailable(action,color){
+  if(game.over)return false;
+  if(game.phase==="setup")return action==="emperor"&&color===ui.setupSide;
+  if(action==="emperor")return false;
+  if(isRotate(action))return SIZES.some((_,f)=>canRotate(game,f,color,action==="rotateRight"?1:-1));
+  if(action==="marshalMove")return findPieces(game,color,"marshal").length>0;
+  if(action==="marshal")return !game.marshalUsed[color]&&SIZES.some((_,f)=>countField(game,color,f,"squire")>=MARSHAL_MIN_SQUIRES);
+  return legalTargetKeys(action,color).size>0;
+}
+
+function legalTargetKeys(action,color){
+  const keys=new Set();
+  if(action==="squire"||action==="knight"||action==="marshal"||action==="emperor"){
+    game.fields.forEach((field,f)=>field.grid.forEach((row,r)=>row.forEach((_,c)=>{
+      const ok=action==="emperor"?canPlaceEmperor(game,color,{f,r,c}):canPlace(game,action,f,r,c,color);
+      if(ok)keys.add(keyOf({f,r,c}));
+    })));
+  }else if(action==="marshalMove"){
+    if(ui.selected)marshalTargets(game,ui.selected,color).forEach(s=>keys.add(keyOf(s)));
+    else findPieces(game,color,"marshal").forEach(s=>keys.add(keyOf(s)));
+  }
+  return keys;
+}
+
+/* ---------- actions ---------- */
+
+function say(text){ui.message=text;render()}
+
+// Each player's last move choice stays selected between turns (legal targets stay highlighted).
+function restoreAction(color){
+  ui.action=null;ui.selected=null;
+  if(!color||game.over||game.phase==="setup"||(vsAI()&&color==="black"))return;
+  let a=ui.lastAction[color];
+  if(a==="marshal"&&game.marshalUsed[color])a=null;          // deploying is once-only: don't auto-arm "move"
+  if(!a||!actionAvailable(a,color))return;
+  ui.action=a;
+  if(a==="marshalMove"){const m=findPieces(game,color,"marshal");if(m.length===1)ui.selected=m[0]}
+}
+
+function chooseAction(action){
+  if(!humanTurn())return;
+  const color=activeColor();
+  ui.selected=null;
+  if(ui.action===action&&game.phase!=="setup"){ui.action=null;ui.lastAction[color]=null;return say("Move cancelled. Pick a move.")}
+  if(!actionAvailable(action,color)){ui.action=null;return say("That move isn't available right now.")}
+  ui.action=action;
+  if(game.phase==="play")ui.lastAction[color]=action;
+  if(action==="marshalMove"){
+    const mine=findPieces(game,color,"marshal");
+    if(mine.length===1)ui.selected=mine[0];
+  }
+  say(HINTS[action]);
+}
+
+function clickCell(f,r,c){
+  if(!humanTurn())return;
+  const color=activeColor(),target={f,r,c},piece=at(game,target);
+
+  if(game.phase==="setup"){
+    if(canPlaceEmperor(game,color,target)){
+      game.picks[color]=target;
+      return say("Emperor placed (only you can see it). Click another square to change it, or press Confirm Emperor.");
+    }
+    return say("Pick a highlighted square in your own 3×3 or 5×5 field. Squares where the Emperor could never be captured (like some board-edge corners) are not allowed.");
+  }
+
+  if(!ui.action)return say("Pick a move first (panel under the board).");
+  const action=ui.action;
+
+  if(action==="marshalMove"){
+    if(!ui.selected){
+      if(piece&&piece.color===color&&piece.kind==="marshal"){ui.selected=target;return say("Marshal selected. Click a highlighted square.")}
+      return say("Click your Marshal first.");
+    }
+    if(marshalTargets(game,ui.selected,color).some(s=>keyOf(s)===keyOf(target)))
+      return play({type:"marshalMove",from:ui.selected,to:target});
+    return say("The Marshal moves one square in any direction within its own field, onto an empty or enemy square.");
+  }
+
+  if(isRotate(action)){
+    const dir=action==="rotateRight"?1:-1;
+    if(canRotate(game,f,color,dir))return play({type:"rotate",f,dir});
+    if(MODES[game.mode].marshalLocksRotation!==false&&hasMarshal(game,f,other(color)))return say("Blocked: an enemy Marshal is on that field.");
+    if(!countField(game,color,f,"squire"))return say("You need at least one Squire on that field to rotate it.");
+    return say("That rotation would leave an Emperor on a square that can never be flanked, so it isn't allowed.");
+  }
+
+  if(canPlace(game,action,f,r,c,color))return play({type:"place",kind:action,f,r,c});
+  say({
+    squire:"Squires go on an empty square directly beside one of your pieces.",
+    knight:"A Knight must capture: bracket enemy pieces in a straight line against another of your pieces.",
+    marshal:"Deploy the Marshal on an empty square of a field where you have 3+ Squires (once per game)."
+  }[action]);
+}
+
+function describeMove(move){
+  if(move.type==="place")return`placed a ${cap(move.kind)} at ${squareLabel(move)}`;
+  if(move.type==="marshalMove")return`moved the Marshal to ${squareLabel(move.to)}`;
+  return`rotated ${FIELD_NAMES[move.f]} ${move.dir===1?"right":"left"}`;
+}
+
+function snapshot(){return{state:cloneState(game),logLen:ui.log.length,positions:new Map(ui.positions)}}
+
+function play(move){
+  ui.history.push(snapshot());
+  const color=game.turn,moveNo=Math.floor(game.ply/2)+1;
+  const result=applyMove(game,move);
+
+  if(!game.over){                                   // threefold repetition = draw
+    const key=positionKey(game),n=(ui.positions.get(key)||0)+1;
+    ui.positions.set(key,n);
+    if(n>=3)declareDraw(game,"Draw: the same position occurred three times.");
+  }
+
+  const lost=result.captured.length+(result.landed?1:0);
+  ui.last=result.touched;ui.landed=result.landed?[result.landed]:[];
+  restoreAction(game.over?null:activeColor());
+  const what=describeMove(move);
+
+  ui.log.push(`${moveNo}. ${nameOf(color)} ${what}.`+(lost?` Captured ${lost}.`:"")+
+    (result.gained?` +${result.gained}.`:""));
+  ui.message=`${nameOf(color)} ${what}.`+
+    (lost?` Captured ${lost} piece${lost===1?"":"s"}.`:"")+
+    (result.gained?` +${result.gained} point${result.gained===1?"":"s"}.`:"")+
+    (game.over?` GAME OVER — ${game.endReason}`:` ${nameOf(game.turn)} to move.`);
+  if(game.over)ui.log.push(game.winner?`Result: ${game.endReason} (${cap(game.winner)} wins)`:`Result: ${game.endReason}`);
+
+  if(lost){
+    ui.animating=true;
+    const g=game;
+    setTimeout(()=>finishFlash(g),1000);
+  }
+  render();
+  if(!lost)maybeRunAI();
+}
+
+function finishFlash(g){
+  settle(g);
+  if(g!==game)return;
+  ui.animating=false;ui.landed=[];
+  render();
+  maybeRunAI();
+}
+
+function maybeRunAI(){
+  if(!vsAI()||game.phase==="setup"||game.turn!=="black"||game.over||ui.animating||ui.busy)return;
+  const g=game;
+  ui.busy=true;
+  ui.message="Black AI is choosing a move…";
+  render();
+  setTimeout(()=>{
+    if(g!==game)return;
+    let move=null;
+    try{move=chooseAI(g,opponent(),"black",ui.positions)}catch(error){console.error(error)}
+    ui.busy=false;
+    if(move)play(move);
+    else{g.over=true;g.endReason="The AI could not move.";ui.message=g.endReason;render()}
+  },40);
+}
+
+// Undo: against the computer, rewinds to your previous turn (undoes its reply too).
+function undo(){
+  if(ui.busy||ui.animating||!ui.history.length)return;
+  let entry;
+  do{entry=ui.history.pop()}while(vsAI()&&entry.state.turn!=="white"&&ui.history.length);
+  game=entry.state;
+  ui.log.length=entry.logLen;
+  ui.positions=entry.positions;
+  Object.assign(ui,{last:[],landed:[]});
+  restoreAction(activeColor());
+  ui.message=`Undid the last move. ${nameOf(game.turn)} to move.`;
+  render();
+  maybeRunAI();
+}
+
+// End Game = the player to move forfeits.
+function endGame(){
+  if(game.over||ui.busy||ui.animating)return;
+  if(game.phase==="setup"){startNewGame(true);return}
+  if(!confirm(`End the game? ${nameOf(game.turn)} forfeits and ${nameOf(other(game.turn))} wins.`))return;
+  const loser=game.turn;
+  finish(game,other(loser),`${nameOf(loser)} ended the game.`);
+  ui.action=null;ui.selected=null;
+  ui.log.push(`Result: ${game.endReason} (${cap(game.winner)} wins)`);
+  ui.message=`GAME OVER — ${game.endReason} ${nameOf(game.winner)} wins.`;
+  render();
+}
+
+/* ---------- Emperor mode setup flow ---------- */
+
+function confirmEmperor(){
+  const side=ui.setupSide;
+  if(!side||!game.picks[side])return say("Click a highlighted square in your 3×3 or 5×5 field to place your Emperor first.");
+  if(side==="white"&&!vsAI()){
+    ui.setupSide="black";ui.action="emperor";
+    return say("White's Emperor is hidden. Pass the screen to Black: place your Emperor (White, look away!).");
+  }
+  if(vsAI())game.picks.black=chooseEmperorSquare(game,"black",opponent());
+  revealEmperors(game);
+  ui.setupSide=null;ui.action=null;
+  ui.positions=new Map([[positionKey(game),1]]);
+  ui.log.push("Both Emperors revealed.");
+  ui.message="Both Emperors are revealed. White to move.";
+  render();
+  maybeRunAI();
+}
+
+function startNewGame(first=false){
+  if(!first&&game&&!game.over&&game.ply>0&&!confirm("Start a new game? The current game will be lost."))return false;
+  const mode=$("mode").value;
+  game=createGame({layoutName:$("layout").value,mode,target:Number($("target").value)||DEFAULT_TARGET,emperorSetup:mode==="emperor"});
+  Object.assign(ui,{action:null,selected:null,lastAction:{white:null,black:null},busy:false,animating:false,setupSide:null,
+    last:[],landed:[],log:[],history:[],positions:new Map()});
+  $("rules").innerHTML=rulesHTML(game.mode);
+  syncModeControls();
+  if(game.phase==="setup"){
+    ui.setupSide="white";ui.action="emperor";
+    ui.message=vsAI()
+      ?"Place your Emperor in your 3×3 or 5×5 field. The computer places its own in secret; both are revealed when you confirm."
+      :"White: place your Emperor in your 3×3 or 5×5 field (Black, look away!).";
+  }else{
+    ui.positions.set(positionKey(game),1);
+    ui.message="White to move. Pick a move from the panel under the board; it stays selected between turns.";
+  }
+  render();
+  maybeRunAI();
+  return true;
+}
+const TARGET_OPTIONS={
+  hill:{values:[51,75,100],def:100},
+  plurality:{values:[11,15,30,50,75],def:50}
+};
+function syncModeControls(){
+  const m=$("mode").value;
+  $("targetLabel").hidden=m==="emperor";
+  const t=TARGET_OPTIONS[m];
+  if(t&&$("target").dataset.mode!==m){
+    $("target").innerHTML=t.values.map(v=>`<option value="${v}"${v===t.def?" selected":""}>${v} points</option>`).join("");
+    $("target").dataset.mode=m;
+  }
+}
+
+/* ---------- rendering ---------- */
+
+function rotationMark(f,color){
+  if(MODES[game.mode].marshalLocksRotation!==false&&hasMarshal(game,f,other(color)))return"🔒";
+  return countField(game,color,f,"squire")?"✓":"—";
+}
+function marshalState(color){
+  if(!game.marshalUsed[color])return"Available";
+  return findPieces(game,color,"marshal").length?"On the board":"Captured";
+}
+const emperorState=color=>game.phase==="setup"?"being placed":
+  findPieces(game,color,"emperor").length?"standing":"<strong>captured</strong>";
+
+function rulesHTML(mode){
+  const emp=mode==="emperor",plur=mode==="plurality",hill=!emp,lock=MODES[mode].marshalLocksRotation!==false;
+  const goal=emp
+    ?`<strong>Goal.</strong> Capture the enemy <strong>Emperor</strong>. Your Emperor drives your campaign; the game ends the moment either Emperor is captured. There are no points and fields have no value in this mode. You also win instantly if your opponent has no legal move.`
+    :plur
+    ?`<strong>Goal.</strong> Bank points by holding fields, but a field only counts once you have at least <em>half the board</em> of presence on it (5 on a 3×3, 13 on a 5×5, 25 on the 7×7) and more presence than your opponent. The first side to reach the target wins. You also win instantly if your opponent has no Squires left on the board, or no legal move.`
+    :`<strong>Goal.</strong> Hold the majority of influence on fields to bank points every turn. The first side to reach the target (default 100) wins. You also win instantly if your opponent has no Squires left on the board, or no legal move.`;
+  const board=`
+      <li>Five fields touch each other: a small 3×3 home field for each side, two 5×5 fields, and the big 7×7 in the middle. Lines, flanks and placement all continue across field seams.</li>`+
+    (hill?`<li>Each side starts with three Squires in a line on its home 3×3. White moves first.</li>`
+         :`<li>Each side starts with <strong>only its Emperor</strong>. Squires are placed beside it (or beside any piece you already have), so your army grows outward from the Emperor. White moves first.</li>`)+`
+      <li><strong>Piece key</strong> (the move panel under the board; your last choice stays selected between turns, and Esc or pressing it again clears it): ♙ pawn = Squire · ♘ knight = Knight · ♖ rook = Marshal${hill?"":" · ♔ king = Emperor"} · ↺ ↻ = rotate a field.</li>`+
+    (hill?`<li>Field border colour shows who holds it (blue = White, red = Black, grey = nobody).</li>`
+      :`<li><strong>Emperor setup.</strong> Before move 1, each side places its Emperor on any empty highlighted square of its own 3×3 or its own 5×5 (never the 7×7). White places first, then Black, and neither placement is shown until both are confirmed (on a shared screen, the other player looks away). The Emperor is never moved or placed again, but rotating its field carries it along. It counts as one of your pieces: you can place beside it, and it can be one end of a flank. It is captured by the normal flank rules or by a Marshal moving onto it.</li>
+      <li><strong>Safe-square rule.</strong> Some squares (like board-edge corners) can never be flanked, so a piece parked there could never be captured. An Emperor must sit where a flank line exists whose two squares can both be flanked, so no defender can wall it in permanently. A rotation that would carry an Emperor onto a square that fails this isn't allowed.</li>`);
+  const rotate=`Turn a whole field 90° (every piece on it moves). You need at least one Squire on that field${lock?", and the opponent must not have a Marshal there":""}. Right is clockwise.`;
+  const marshal=`Once per game, on any empty square of a field where you have at least three Squires. After that the same icon moves it.`+
+    (lock?` A Marshal on a field stops the opponent from rotating it (you can still rotate it yourself).`:` (A Marshal does not lock rotation in this mode.)`);
+  const st=MODES[mode].startTurn||START_TURN;
+  const ord=n=>n+({1:"st",2:"nd",3:"rd"}[n]||"th");
+  const startText=st.white===st.black?`Scoring begins on turn ${st.white} for both players.`:`Scoring begins on White’s ${ord(st.white)} turn and Black’s ${ord(st.black)} turn.`;
+  const scoring=plur?`
+    <h3>Fields, presence and points (Plurality)</h3>
+    <ul>
+      <li>Presence on a field: Squire 1, Knight 2, Marshal 3.</li>
+      <li>A field scores for you only when your presence is at least half the squares plus one — <strong>5 of 9</strong> on a 3×3, <strong>13 of 25</strong> on a 5×5, <strong>25 of 49</strong> on the 7×7 — and is higher than your opponent’s. If both of you reach the number, the higher presence holds it; equal holds nothing.</li>
+      <li>Field values: 3×3 = 1, 5×5 = 2, 7×7 = 3. Each field you hold is banked at the end of every one of your turns. ${startText}</li>
+      <li>Targets are checked after Black’s turn so both sides get equal turns. If both sides are tied at or above the target, whoever has more total presence on the board wins; if that is level too, play continues.</li>
+      <li>Because a field has to be nearly half full before it scores, this mode is slower: building up, flanking and rotating fields to break up the other side’s lines all matter.</li>
+    </ul>`
+    :hill&&!emp?`
+    <h3>Fields, influence and points</h3>
+    <ul>
+      <li>Influence on a field: Squire 1, Knight 1, Marshal 2. More influence holds the field; a tie holds nothing.</li>
+      <li>Field values: 3×3 = 1, 5×5 = 2, 7×7 = 3. Each field you hold is banked at the end of every one of your turns.</li>
+      <li>${startText}</li>
+      <li>Targets are checked after Black’s turn so both sides get equal turns. If both sides are tied at or above the target, whoever holds the 7×7 wins; if nobody does, play continues.</li>
+    </ul>`:"";
+  return`<h2>How to play — ${MODES[mode].label}</h2>
+    <div>${goal}</div>
+    <h3>The board</h3><ul>${board}</ul>
+    <h3>Your turn: press one icon, then click the board</h3>
+    <ul>
+      <li><strong>Place Squire</strong> (pawn) – on any empty square directly (up/down/left/right) beside one of your pieces${hill?"":", including your Emperor"}.</li>
+      <li><strong>Place Knight</strong> – only on a square where it <em>captures</em>: in a straight row or column, the Knight and another of your pieces (Squire, Knight${hill?"":", Emperor"} or Marshal) must bracket one or more enemy pieces. Knights never move and are unlimited.</li>
+      <li><strong>Marshal</strong> (rook) – deploy: ${marshal}<br>Move: one square in any direction (including diagonals) inside its own field, onto an empty square or an enemy piece, which it captures. It cannot move onto your own pieces.</li>
+      <li><strong>Rotate Left / Right</strong> – ${rotate}</li>
+    </ul>
+    <h3>Captures</h3>
+    <ul>
+      <li>A line of one or more enemy pieces (no gaps) between two of your pieces is captured. The two ends can be any of your pieces.</li>
+      <li>Captures happen on <em>your</em> move and only for lines involving the piece you just placed or moved. After a <strong>rotation</strong>, every flank that touches the rotated field captures, so you can rotate a board into captures.</li>
+      <li>A piece that is placed or moved <em>between</em> two enemy pieces is safe. It can only be lost to a later flank that involves a piece the enemy places or moves, or a rotation of its field.</li>
+      <li>A Marshal can be captured like any other piece. Captured pieces flash twice and are removed.</li>
+    </ul>${scoring}
+    <h3>Draws and ending early</h3>
+    <ul>
+      <li>If the same position (same pieces, same player to move${hill?", same score":""}) occurs three times, the game is a draw.</li>
+      <li><strong>End Game</strong> makes the player to move forfeit.</li>
+    </ul>`;
+}
+
+function emperorPanelHTML(){
+  const rows=SIZES.map((_,f)=>`<tr><td>${FIELD_NAMES[f]}</td><td>W ${rotationMark(f,"white")} · B ${rotationMark(f,"black")}</td></tr>`).join("");
+  const lock=MODES.emperor.marshalLocksRotation!==false;
+  return`<h2>Emperor</h2>
+    <div><strong>Emperors:</strong> White ${emperorState("white")} · ${nameOf("black")} ${emperorState("black")}</div>
+    <table><tr><th>Field</th><th>Can rotate?</th></tr>${rows}</table>
+    <div class="legend muted"><span>✓ can rotate</span>${lock?"<span>🔒 blocked by enemy Marshal</span>":""}<span>— needs a Squire there</span></div>`;
+}
+
+function scoringHTML(){
+  if(game.mode==="emperor")return emperorPanelHTML();
+  const plur=game.mode==="plurality";
+  const rows=SIZES.map((_,f)=>{
+    const i=fieldInfluence(game,f),owner=fieldOwner(game,f);
+    return`<tr><td>${FIELD_NAMES[f]}${f===BIG_FIELD?" ★":""}</td><td>${FIELD_VALUE[f]}</td>
+      ${plur?`<td>${fieldThreshold(f)} of ${SIZES[f]*SIZES[f]}</td>`:""}
+      <td>${i.white}</td><td>${i.black}</td>
+      <td>${owner?`<strong>${nameOf(owner)}</strong>`:'<span class="muted">Nobody</span>'}</td>
+      <td>W ${rotationMark(f,"white")} · B ${rotationMark(f,"black")}</td></tr>`;
+  }).join("");
+  const s=score(game);
+  const status=color=>s[color].scoring?`scoring (+${s[color].fields}/turn)`
+    :`scoring opens on turn ${startTurnOf(game,color)} (turns taken: ${s[color].turns})`;
+  const weights=plur?"Presence: Squire 1 · Knight 2 · Marshal 3":"Influence: Squire 1 · Knight 1 · Marshal 2";
+  return`<h2>Fields &amp; scoring</h2>
+    <table>
+      <tr><th>Field</th><th>Value / turn</th>${plur?"<th>Needed to score</th>":""}<th>White ${plur?"presence":"influence"}</th><th>Black ${plur?"presence":"influence"}</th><th>Held by</th><th>Can rotate?</th></tr>
+      ${rows}
+    </table>
+    <div class="legend muted"><span>${weights}</span><span>✓ can rotate</span><span>🔒 blocked by enemy Marshal</span><span>— needs a Squire there</span><span>★ tiebreaker field</span></div>
+    <div class="legend muted" style="margin-top:4px">
+      <span><i class="sw" style="background:#0072bc"></i>held by White</span>
+      <span><i class="sw" style="background:#c0392b"></i>held by Black</span>
+      <span><i class="sw" style="background:#8a8a8a"></i>nobody</span></div>
+    <div><strong>White:</strong> ${s.white.total} / ${game.target} — ${status("white")}</div>
+    <div><strong>${nameOf("black")}:</strong> ${s.black.total} / ${game.target} — ${status("black")}</div>`;
+}
+
+// Move panels sit above the board (never on it): one per human player.
+function panelsHTML(){
+  const colors=vsAI()?["white"]:["white","black"];
+  return colors.map(color=>{
+    const live=humanTurn()&&activeColor()===color;
+    const mk=(action,glyph,caption,extra="")=>{
+      const on=live&&actionAvailable(action,color),armed=live&&ui.action===action;
+      return`<button class="pal ${color}${extra}${armed?" armed":""}" data-action="${action}" data-side="${color}" title="${TIPS[action]}" aria-label="${TIPS[action]}"${on?"":" disabled"}><span class="g">${glyph}</span><small>${caption}</small></button>`;
+    };
+    const marshalAct=game.marshalUsed[color]?"marshalMove":"marshal";
+    const pieces=[mk("squire",GLYPH[color].squire,"Squire"),mk("knight",GLYPH[color].knight,"Knight"),
+      mk(marshalAct,GLYPH[color].marshal,marshalAct==="marshal"?"Deploy Marshal":"Move Marshal")];
+    if(game.mode==="emperor")pieces.push(mk("emperor",GLYPH[color].emperor,"Emperor"));
+    const title=nameOf(color)+(game.over?"":live?" — your move":" — waiting");
+    return`<div class="mpanel ${color}${live?" live":""}"><div class="mp-title">${title}</div>
+      <div class="mp-groups">
+        <div class="mp-group"><span class="mp-label">Place / use a piece</span><div class="mp-btns">${pieces.join("")}</div></div>
+        <div class="mp-group"><span class="mp-label">Rotate a field</span><div class="mp-btns">${mk("rotateLeft","↺","Left"," rot")}${mk("rotateRight","↻","Right"," rot")}</div></div>
+      </div></div>`;
+  }).join("");
+}
+
+function render(){
+  const cell=computeCell();
+  document.documentElement.style.setProperty("--cell",cell+"px");
+  document.documentElement.style.setProperty("--glyph",Math.round(cell*.68)+"px");
+
+  const hill=MODES[game.mode].usesPoints,setup=game.phase==="setup";   // `hill` = a points mode (Hill or Plurality)
+  const points=hill?score(game):null,size=bounds(),color=activeColor(),mine=humanTurn();
+  $("status").textContent=`${game.over?"Game over":setup?"Setup":nameOf(game.turn)+" to move"}${ui.busy?" — thinking":""} • ${ui.message}`;
+  $("status").classList.toggle("over",game.over);
+
+  $("scores").innerHTML=["white","black"].map(c=>{
+    const squires=countPieces(game,c,"squire");
+    return`<div class="score${!game.over&&color===c?" turn":""}"><strong>${nameOf(c)}</strong><br>
+      ${hill?`Points: <strong>${points[c].total}</strong> / ${game.target}<br>
+      Fields held now: ${points[c].fields} pt/turn<br>
+      Turns taken: ${points[c].turns} (scoring from turn ${startTurnOf(game,c)})<br>`
+        :`Emperor: ${emperorState(c)}<br>Turns taken: ${game.turns[c]}<br>`}
+      Squires: <span class="${hill&&squires<=2?"warn":""}">${squires}</span> · Knights: ${countPieces(game,c,"knight")}<br>
+      Marshal: ${marshalState(c)}</div>`;
+  }).join("");
+
+  $("scoringPanel").innerHTML=scoringHTML();
+  $("movePanels").innerHTML=panelsHTML();
+  $("undoBtn").disabled=!ui.history.length||ui.busy||ui.animating;
+  $("endGame").disabled=game.over||ui.busy||ui.animating;
+
+  $("setupBar").hidden=!setup||game.over;
+  if(setup&&!game.over){
+    $("setupText").textContent=`${cap(ui.setupSide||"white")}: place your Emperor in your 3×3 or 5×5 field (highlighted squares).`+
+      (vsAI()?" The computer places its own in secret.":ui.setupSide==="white"?" (Black, look away!)":" (White, look away!)");
+    $("confirmEmperor").disabled=!mine||!game.picks[ui.setupSide];
+  }
+
+  // board
+  const targets=mine&&ui.action&&!isRotate(ui.action)?legalTargetKeys(ui.action,color):new Set();
+  const rotatable=mine&&isRotate(ui.action)?new Set(SIZES.map((_,f)=>f).filter(f=>canRotate(game,f,color,ui.action==="rotateRight"?1:-1))):null;
+  const active=document.activeElement;
+  const focusSel=active&&active.dataset&&active.dataset.f!==undefined?
+    `[data-f="${active.dataset.f}"][data-r="${active.dataset.r}"][data-c="${active.dataset.c}"]`:null;
+
+  const workspace=$("workspace");
+  workspace.style.width=`${size.cols*cell}px`;
+  workspace.style.height=`${size.rows*cell}px`;
+  const pick=setup&&ui.setupSide?game.picks[ui.setupSide]:null;   // only the placing player sees their pick
+  workspace.innerHTML=game.fields.map((field,f)=>{
+    const p=LAYOUTS[game.layoutName].positions[f],owner=hill?fieldOwner(game,f):null;
+    const cells=field.grid.map((row,r)=>row.map((piece,c)=>{
+      const key=keyOf({f,r,c});
+      let shown=piece,pending=false;
+      if(pick&&pick.f===f&&pick.r===r&&pick.c===c){shown={color:ui.setupSide,kind:"emperor"};pending=true}
+      const classes=["cell",shown?shown.color:"",
+        shown&&shown.removing?"removing":"",
+        pending?"pending":"",
+        ui.landed.includes(key)?"landed":"",
+        ui.last.includes(key)?"last":"",
+        targets.has(key)?`legal${shown&&!pending?" enemy":""}`:"",
+        ui.selected&&keyOf(ui.selected)===key?"selected":""].join(" ");
+      const desc=shown?`${shown.color} ${shown.kind}`:"empty";
+      return`<button class="${classes}" data-f="${f}" data-r="${r}" data-c="${c}"
+        aria-label="${squareLabel({f,r,c})}: ${desc}">${shown?`<span class="pc">${GLYPH[shown.color][shown.kind]}</span>`:""}</button>`;
+    }).join("")).join("");
+    const fieldClass=["field",rotatable?(rotatable.has(f)?"pick":"dim"):""].join(" ");
+    return`<section class="${fieldClass}" style="left:${p.x*cell}px;top:${p.y*cell}px">
+      <div class="grid held-${owner||"none"}" style="grid-template-columns:repeat(${field.size},${cell}px)">${cells}</div>
+    </section>`;
+  }).join("");
+  if(focusSel){const el=workspace.querySelector(focusSel);if(el)el.focus({preventScroll:true})}
+
+  $("log").innerHTML=ui.log.map(l=>`<li>${l.replace(/^\d+\.\s/,"")}</li>`).join("");
+}
+
+/* ---------- wiring ---------- */
+
+$("movePanels").addEventListener("click",event=>{
+  const pal=event.target.closest("[data-action]");
+  if(pal&&!pal.disabled)chooseAction(pal.dataset.action);
+});
+$("workspace").addEventListener("click",event=>{
+  const b=event.target.closest("[data-f]");
+  if(b)clickCell(+b.dataset.f,+b.dataset.r,+b.dataset.c);
+});
+document.addEventListener("keydown",event=>{
+  if(event.key==="Escape"&&ui.action&&game.phase!=="setup"){
+    ui.lastAction[activeColor()]=null;ui.action=null;ui.selected=null;say("Move cancelled. Pick a move.");
+  }
+});
+$("newGame").addEventListener("click",()=>startNewGame());
+$("endGame").addEventListener("click",endGame);
+$("undoBtn").addEventListener("click",undo);
+$("confirmEmperor").addEventListener("click",confirmEmperor);
+// Choosing a mode or layout starts that game straight away (asks first if a game is under way).
+for(const id of["mode","layout"])$(id).addEventListener("change",()=>{
+  syncModeControls();
+  if(!startNewGame()){$("mode").value=game.mode;$("layout").value=game.layoutName;syncModeControls()}
+});
+$("target").addEventListener("change",()=>{
+  game.target=Number($("target").value)||DEFAULT_TARGET;
+  say(`Target set to ${game.target} points.`);
+});
+$("opponent").addEventListener("change",()=>{render();maybeRunAI()});
+$("copyLog").addEventListener("click",()=>{
+  const text=[`Squires & Rotations — mode: ${MODES[game.mode].label}, layout: ${LAYOUTS[game.layoutName].label}, opponent: ${opponent()}`,
+    ...ui.log].join("\n");
+  (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).catch(()=>{
+    const t=document.createElement("textarea");t.value=text;document.body.appendChild(t);t.select();
+    try{document.execCommand("copy")}catch(e){}t.remove();
+  });
+});
+let resizeTimer;
+window.addEventListener("resize",()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(render,120)});
+
+if(new URLSearchParams(location.search).has("debug")){
+  $("tests").hidden=false;
+  $("tests").addEventListener("click",()=>{
+    const out=$("testOutput");out.hidden=false;
+    const results=runRuleTests();
+    out.textContent=`${results.filter(r=>r.startsWith("PASS")).length}/${results.length} passed\n`+results.join("\n");
+  });
+}
+
+startNewGame(true);
+</script>
+</body>
+</html>

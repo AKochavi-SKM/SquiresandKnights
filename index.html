@@ -3,13 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Squires &amp; Rotations</title>
+<title>Squires and Knights</title>
+<meta name="description" content="Squires and Knights: a two-player strategy game of flanks, fields and rotating boards. Play free in your browser.">
+<meta property="og:title" content="Squires and Knights">
+<meta property="og:description" content="A strategy game of flanks, fields and rotating boards. Play free in your browser.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%23231d18'/%3E%3Ctext x='50' y='74' font-size='66' text-anchor='middle' fill='%23f1d98a'%3E%E2%99%98%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
 <style>
 :root{--green:#86BC25;--dark:#282728;--blue:#005587;--tile:#e7e4de;--cell:42px;--glyph:28px;--hold:#8a8a8a}
 *{box-sizing:border-box}
 body{margin:0;background:#f5f5f5;color:#171717;font:14px/1.4 Arial,sans-serif}
-header{padding:20px 24px;background:var(--dark);color:#fff;border-bottom:5px solid var(--green)}
-h1{margin:0 0 5px;font-size:27px}
+
 main{max-width:1600px;margin:auto;padding:16px}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 button,select{font:inherit;padding:8px 10px;border:1px solid #aaa;border-radius:4px;background:#fff}
@@ -80,70 +87,145 @@ button.primary{background:var(--blue);color:#fff;border-color:var(--blue);font-w
 #log{max-height:220px;overflow:auto;font-size:13px}
 pre#testOutput{white-space:pre-wrap;margin-top:12px;padding:13px;background:#fff;border:1px solid #ddd}
 @media(max-width:700px){main{padding:9px}.workspace-wrap{padding:10px}.panel table{min-width:0}.pal{width:64px}}
+/* ---- banner ---- */
+.banner{background:radial-gradient(ellipse at 50% 0,#3a2f26 0,#241d18 55%,#17120e 100%);border-bottom:4px double #c9a227;box-shadow:0 3px 10px rgba(0,0,0,.35);padding:18px 16px 16px;text-align:center;color:#f1d98a}
+.banner-inner{display:flex;align-items:center;justify-content:center;gap:clamp(10px,3vw,34px);max-width:1100px;margin:auto}
+.crest{font-size:clamp(30px,6vw,56px);line-height:1;color:#c9a227;text-shadow:0 2px 0 #4a350c;opacity:.9}
+.banner h1{margin:0;font-family:"MedievalSharp","UnifrakturCook","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;font-weight:400;font-size:clamp(34px,7vw,68px);line-height:1.05;letter-spacing:.02em;color:#f1d98a;text-shadow:0 2px 0 #5a3f10,0 4px 14px rgba(0,0,0,.6),0 0 22px rgba(201,162,39,.28)}
+.banner .tagline{margin:8px 0 0;font-family:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;font-size:clamp(12px,2.2vw,16px);letter-spacing:.22em;text-transform:uppercase;color:#cdb676}
+.banner .rule{height:0;border-top:1px solid #c9a227;border-bottom:1px solid #c9a227;width:min(420px,70%);margin:10px auto 0;padding-top:2px;opacity:.7}
+/* ---- landing / setup ---- */
+.setup{max-width:1000px;margin:6px auto 30px}
+.setup h2{margin:14px 0 4px;font-size:24px}
+.step{margin:16px 0;padding:14px 16px 16px;background:#fff;border:1px solid #d9d9d9;border-radius:8px}
+.step:disabled{opacity:.55}
+.step legend{padding:0 8px;font-weight:bold;font-size:16px}
+.stepn{display:inline-grid;place-items:center;width:24px;height:24px;margin-right:6px;border-radius:50%;background:var(--dark);color:#f1d98a;font-size:13px}
+.mode-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.mode-card{position:relative;display:block;cursor:pointer}
+.mode-card input{position:absolute;opacity:0;pointer-events:none}
+.mc{display:flex;flex-direction:column;gap:6px;height:100%;padding:12px 14px;border:2px solid #cfcfcf;border-radius:8px;background:#fafafa;transition:border-color .12s,box-shadow .12s}
+.mc strong{font-size:17px}
+.mc .tag{align-self:flex-start;padding:1px 8px;border-radius:10px;background:#efe6c8;color:#5a4710;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.mc .desc{font-size:13px;color:#444}
+.mode-card:hover .mc{border-color:#b9a15a}
+.mode-card input:checked+.mc{border-color:#8a6d12;background:#fff8e1;box-shadow:0 0 0 3px rgba(201,162,39,.35)}
+.mode-card input:focus-visible+.mc{outline:3px solid #005587;outline-offset:2px}
+.layout-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:8px}
+.layout-opt{display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px;border:2px solid #d4d4d4;border-radius:8px;background:#fafafa;cursor:pointer}
+.layout-opt:hover{border-color:#b9a15a}
+.layout-opt:has(input:checked){border-color:#8a6d12;background:#fff8e1;box-shadow:0 0 0 3px rgba(201,162,39,.35)}
+.lp{width:100%;max-height:150px}
+.layout-opt .r{display:flex;align-items:center;gap:8px;font-weight:bold}
+.layout-opt .r input{width:18px;height:18px;accent-color:#8a6d12}
+.options-row{display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+.setup-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.setup-actions .primary{padding:12px 26px;font-size:17px}
+.summary{font-weight:bold;margin-right:6px}
+@media(max-width:700px){.banner-inner .crest{display:none}}
 </style>
 </head>
 <body>
-<header>
-  <h1>Squires &amp; Rotations</h1>
-  <div>Connected fields · flank captures · rotating boards</div>
+<header class="banner">
+  <div class="banner-inner">
+    <span class="crest" aria-hidden="true">&#9816;</span>
+    <div>
+      <h1>Squires and Knights</h1>
+      <p class="tagline">Flank &middot; Rotate &middot; Conquer the field</p>
+    </div>
+    <span class="crest" aria-hidden="true">&#9814;</span>
+  </div>
+  <div class="rule" aria-hidden="true"></div>
 </header>
 <main>
-  <div class="toolbar">
-    <label>Game mode:
-      <select id="mode">
-        <option value="hill">King of the Hill (points)</option>
-        <option value="emperor">Emperor</option>
-        <option value="plurality">Plurality (majority of the board)</option>
-      </select>
-    </label>
-    <label>Layout:
-      <select id="layout">
-        <option value="straight">Straight line</option>
-        <option value="zigzag">Zig-zag</option>
-        <option value="block">Big block (homes touch the 7×7)</option>
-      </select>
-    </label>
-    <label>Opponent:
-      <select id="opponent">
-        <option value="normal">Computer – Normal</option>
-        <option value="easy">Computer – Easy</option>
-        <option value="optimized">Computer – Optimized</option>
-        <option value="human">Human (hot-seat, same screen)</option>
-      </select>
-    </label>
-    <label id="targetLabel">Play to:
-      <select id="target">
-        <option value="51">51 points</option>
-        <option value="75">75 points</option>
-        <option value="100" selected>100 points</option>
-      </select>
-    </label>
-    <button id="newGame">New Game</button>
-    <button id="endGame">End Game</button>
-    <button id="undoBtn" disabled>Undo</button>
-    <button id="tests" hidden>Run Rule Tests</button>
+  <section id="setupScreen" class="setup" aria-labelledby="setupTitle">
+    <h2 id="setupTitle">Choose your game</h2>
+    <p class="muted">Pick a game mode, then a board. Every mode adds new rules to the same pieces, so King of the Hill is the easiest place to start.</p>
+
+    <fieldset class="step" id="modeStep">
+      <legend><span class="stepn">1</span>Game mode</legend>
+      <div class="mode-cards">
+        <label class="mode-card"><input type="radio" name="modeChoice" value="hill"><span class="mc"><strong>King of the Hill</strong><span class="tag">Start here &middot; learn the pieces</span><span class="desc">Hold fields to bank points every turn; first to the target wins. The big center field decides most games.</span></span></label>
+        <label class="mode-card"><input type="radio" name="modeChoice" value="emperor"><span class="mc"><strong>Emperor</strong><span class="tag">Hidden Emperors</span><span class="desc">Secretly place your Emperor, then grow an army outward from it. Capture the enemy Emperor to win. No points.</span></span></label>
+        <label class="mode-card"><input type="radio" name="modeChoice" value="plurality"><span class="mc"><strong>Plurality</strong><span class="tag">Slower &middot; strategic</span><span class="desc">A field only scores once you hold half the board on it. Knights count 2, Marshals 3. The longest points game.</span></span></label>
+        <label class="mode-card"><input type="radio" name="modeChoice" value="quadrants"><span class="mc"><strong>Quadrants</strong><span class="tag">New &middot; all Marshals</span><span class="desc">The Marshal's showdown on one 10&times;10 board of four rotating 5&times;5 quadrants. Ten Marshals each, no Squires. Eliminate the enemy Marshals.</span></span></label>
+      </div>
+    </fieldset>
+
+    <fieldset class="step" id="layoutStep" disabled>
+      <legend><span class="stepn">2</span>Board layout</legend>
+      <p id="layoutHint" class="muted" style="margin:0">Choose a game mode first.</p>
+      <div class="layout-grid" id="layoutGrid"></div>
+    </fieldset>
+
+    <fieldset class="step" id="optionsStep" disabled>
+      <legend><span class="stepn">3</span>Opponent</legend>
+      <div class="options-row">
+        <label>Opponent:
+          <select id="opponent">
+            <option value="normal">Computer – Normal</option>
+            <option value="easy">Computer – Easy</option>
+            <option value="optimized">Computer – Optimized</option>
+            <option value="human">Human (hot-seat, same screen)</option>
+          </select>
+        </label>
+        <label id="targetLabel">Play to:
+          <select id="target">
+            <option value="51">51 points</option>
+            <option value="75">75 points</option>
+            <option value="100" selected>100 points</option>
+          </select>
+        </label>
+      </div>
+    </fieldset>
+
+    <div class="setup-actions">
+      <button id="startGame" class="primary" disabled>Start game</button>
+      <button id="cancelSetup" hidden>Back to current game</button>
+      <span id="setupNote" class="muted">Choose a game mode to begin.</span>
+    </div>
+
+    <!-- state holders (kept in sync by the radio buttons above) -->
+    <select id="mode" hidden>
+      <option value="hill">King of the Hill</option><option value="emperor">Emperor</option>
+      <option value="plurality">Plurality</option><option value="quadrants">Quadrants</option>
+    </select>
+    <select id="layout" hidden>
+      <option value="straight">Straight line</option><option value="zigzag">Zig-zag</option>
+      <option value="block">Big block</option><option value="quadrants">Quadrants</option>
+    </select>
+  </section>
+
+  <div id="gameScreen" hidden>
+    <div class="toolbar">
+      <span id="gameSummary" class="summary"></span>
+      <button id="newGame">New Game</button>
+      <button id="changeSetup">Change mode / board</button>
+      <button id="endGame">End Game</button>
+      <button id="undoBtn" disabled>Undo</button>
+    </div>
+
+    <div class="setupbar" id="setupBar" hidden>
+      <span id="setupText"></span>
+      <button id="confirmEmperor" class="primary">Confirm Emperor</button>
+    </div>
+
+    <div id="status" role="status" aria-live="polite"></div>
+    <div id="scores" class="scores"></div>
+    <div class="workspace-wrap" id="workspaceWrap"><div id="workspace" class="workspace"></div></div>
+    <div id="movePanels" class="move-panels"></div>
+    <div id="scoringPanel" class="panel scoring"></div>
+
+    <div class="panel" id="rules"></div>
+
+    <details class="panel" id="logPanel">
+      <summary><strong>Move log</strong> (copy it into your beta-test feedback)</summary>
+      <ol id="log"></ol>
+      <button id="copyLog">Copy log</button>
+    </details>
   </div>
 
-  <div class="setupbar" id="setupBar" hidden>
-    <span id="setupText"></span>
-    <button id="confirmEmperor" class="primary">Confirm Emperor</button>
-  </div>
-
-  <div id="status" role="status" aria-live="polite"></div>
-  <div id="scores" class="scores"></div>
-  <div class="workspace-wrap" id="workspaceWrap"><div id="workspace" class="workspace"></div></div>
-  <div id="movePanels" class="move-panels"></div>
-  <div id="scoringPanel" class="panel scoring"></div>
-
-  <div class="panel" id="rules"></div>
-
-  <details class="panel" id="logPanel">
-    <summary><strong>Move log</strong> (copy it into your beta-test feedback)</summary>
-    <ol id="log"></ol>
-    <button id="copyLog">Copy log</button>
-  </details>
-
-  <pre id="testOutput" hidden></pre>
+  <div id="debugArea"><button id="tests" hidden>Run Rule Tests</button><pre id="testOutput" hidden></pre></div>
 </main>
 
 <script>
@@ -154,7 +236,8 @@ pre#testOutput{white-space:pre-wrap;margin-top:12px;padding:13px;background:#fff
    ENGINE – pure game rules and AI. No DOM access in this block.
    ===================================================================== */
 
-const SIZES=[3,5,7,5,3];
+const SIZES=[3,5,7,5,3];                // sizes of the five standard fields (a layout may define its own `sizes`)
+const layoutSizes=name=>LAYOUTS[name].sizes||SIZES;
 const FIELD_NAMES=["W 3×3","W 5×5","Center 7×7","B 5×5","B 3×3"];
 const FIELD_VALUE=[1,2,3,2,1];          // points per turn for holding each field
 const BIG_FIELD=2;                      // the 7×7: tiebreaker field
@@ -176,6 +259,9 @@ const LAYOUTS={
     positions:[{x:0,y:2},{x:3,y:1},{x:8,y:0},{x:15,y:1},{x:20,y:2}]},
   zigzag:{label:"Zig-zag",
     positions:[{x:0,y:0},{x:0,y:3},{x:5,y:2},{x:12,y:3},{x:14,y:8}]},
+  quadrants:{label:"Quadrants",sizes:[5,5,5,5],
+    names:["NW quadrant","NE quadrant","SW quadrant","SE quadrant"],
+    positions:[{x:0,y:0},{x:5,y:0},{x:0,y:5},{x:5,y:5}]},
   block:{label:"Big block",
     positions:[{x:0,y:2},{x:3,y:0},{x:1,y:5},{x:1,y:12},{x:6,y:12}]}
 };
@@ -185,7 +271,7 @@ const cap=text=>text[0].toUpperCase()+text.slice(1);
 const keyOf=sq=>`${sq.f}:${sq.r}:${sq.c}`;
 const parseKey=key=>{const[f,r,c]=key.split(":").map(Number);return{f,r,c}};
 const emptyGrid=n=>Array.from({length:n},()=>Array(n).fill(null));
-const inside=(f,r,c)=>r>=0&&c>=0&&r<SIZES[f]&&c<SIZES[f];
+const inside=(state,f,r,c)=>r>=0&&c>=0&&r<state.fields[f].size&&c<state.fields[f].size;
 
 /* ---------- game modes ----------
    A mode supplies: setup (extra starting pieces), afterCaptures (win checks tied to
@@ -220,10 +306,45 @@ const MODES={
     // A tie at the target goes to whoever has more total presence on the board; level still = play on.
     tieBreak(state){
       const t={white:0,black:0};
-      for(let f=0;f<SIZES.length;f++){const i=fieldInfluence(state,f);t.white+=i.white;t.black+=i.black}
+      for(let f=0;f<state.fields.length;f++){const i=fieldInfluence(state,f);t.white+=i.white;t.black+=i.black}
       return{winner:t.white===t.black?null:t.white>t.black?"white":"black",why:"having more total presence on the board"};
     },
     evaluate:(state,me)=>evaluatePlurality(state,me)
+  },
+  quadrants:{
+    label:"Quadrants",usesPoints:false,
+    noSquires:true,                 // no Squires exist in this mode
+    knightLimit:5,                  // Knights per player per game (they never move)
+    marshalAcrossFields:true,       // Marshals step anywhere on the 10x10, across quadrant borders
+    rotateWithAnyPiece:true,        // rotate a quadrant if one of your pieces is in it
+    marshalLocksRotation:false,     // nothing locks rotation here
+    squireLoss:false,
+    repetitionDraw:false,           // the move limit ends stalemates instead
+    moveLimit:50,                   // turns per player
+    setup(state){                   // 10 Marshals each in a row across the back of two quadrants
+      for(let c=0;c<5;c++){
+        state.fields[2].grid[4][c]={color:"white",kind:"marshal"};
+        state.fields[3].grid[4][c]={color:"white",kind:"marshal"};
+        state.fields[0].grid[0][c]={color:"black",kind:"marshal"};
+        state.fields[1].grid[0][c]={color:"black",kind:"marshal"};
+      }
+      state.marshalUsed.white=state.marshalUsed.black=true;   // Marshals start on the board; nothing to deploy
+    },
+    afterCaptures(state,color,lost){
+      if(countPieces(state,other(color),"marshal")===0)
+        finish(state,color,`${cap(color)} captured every enemy Marshal.`);
+    },
+    endTurn(state,color,result){
+      state.turns[color]++;
+      const lim=MODES.quadrants.moveLimit;
+      if(color==="black"&&state.turns.black>=lim){
+        const w=countPieces(state,"white","marshal"),b=countPieces(state,"black","marshal");
+        const why=`Move limit reached (${lim} turns each): White has ${w} Marshal${w===1?"":"s"}, Black has ${b}.`;
+        if(w===b)declareDraw(state,why+" Level, so it is a draw.");
+        else finish(state,w>b?"white":"black",why);
+      }
+    },
+    evaluate:(state,me)=>evaluateQuadrants(state,me)
   },
   emperor:{
     label:"Emperor",usesPoints:false,
@@ -247,9 +368,10 @@ const MODES={
 function newState({layoutName="straight",target=DEFAULT_TARGET,mode="hill"}={}){
   return{
     layoutName,target,mode,phase:"play",picks:null,
-    fields:SIZES.map(size=>({size,rotation:0,grid:emptyGrid(size)})),
+    fields:layoutSizes(layoutName).map(size=>({size,rotation:0,grid:emptyGrid(size)})),
     turn:"white",ply:0,over:false,winner:null,endReason:"",
     marshalUsed:{white:false,black:false},
+    knightsPlaced:{white:0,black:0},
     turns:{white:0,black:0},
     points:{white:0,black:0}
   };
@@ -270,7 +392,7 @@ function cloneState(s){
   return{...s,
     fields:s.fields.map(f=>({size:f.size,rotation:f.rotation,
       grid:f.grid.map(row=>row.map(p=>p?{...p}:null))})),
-    marshalUsed:{...s.marshalUsed},turns:{...s.turns},points:{...s.points},
+    marshalUsed:{...s.marshalUsed},knightsPlaced:{...s.knightsPlaced},turns:{...s.turns},points:{...s.points},
     picks:s.picks?{...s.picks}:null};
 }
 
@@ -281,7 +403,7 @@ function topology(layoutName){
   if(TOPO[layoutName])return TOPO[layoutName];
   const map=new Map();
   LAYOUTS[layoutName].positions.forEach((p,f)=>{
-    for(let r=0;r<SIZES[f];r++)for(let c=0;c<SIZES[f];c++)
+    for(let r=0;r<layoutSizes(layoutName)[f];r++)for(let c=0;c<layoutSizes(layoutName)[f];c++)
       map.set(`${p.x+c}:${p.y+r}`,{f,r,c});
   });
   return TOPO[layoutName]=map;
@@ -367,9 +489,12 @@ function capturesForMove(state,move,color){
 /* ---------- legality ---------- */
 
 function canPlace(state,kind,f,r,c,color=state.turn){
-  if(!inside(f,r,c))return false;
+  if(!inside(state,f,r,c))return false;
   const sq={f,r,c};
   if(at(state,sq))return false;
+  const M=MODES[state.mode];
+  if(kind==="squire"&&M.noSquires)return false;
+  if(kind==="knight"&&M.knightLimit!==undefined&&state.knightsPlaced[color]>=M.knightLimit)return false;
   if(kind==="squire"){
     return ORTHO.some(([dy,dx])=>{
       const n=step(state,sq,dy,dx);
@@ -383,11 +508,21 @@ function canPlace(state,kind,f,r,c,color=state.turn){
 
 function marshalTargets(state,from,color){
   const out=[];
+  if(MODES[state.mode].marshalAcrossFields){            // Quadrants: step anywhere on the whole board
+    for(let dy=-MARSHAL_RANGE;dy<=MARSHAL_RANGE;dy++)for(let dx=-MARSHAL_RANGE;dx<=MARSHAL_RANGE;dx++){
+      if(!dy&&!dx)continue;
+      const sq=step(state,from,dy,dx);
+      if(!sq)continue;
+      const p=at(state,sq);
+      if(!p||p.color!==color)out.push(sq);
+    }
+    return out;
+  }
   for(let dr=-MARSHAL_RANGE;dr<=MARSHAL_RANGE;dr++){
     for(let dc=-MARSHAL_RANGE;dc<=MARSHAL_RANGE;dc++){
       if(!dr&&!dc)continue;
       const r=from.r+dr,c=from.c+dc;
-      if(!inside(from.f,r,c))continue;
+      if(!inside(state,from.f,r,c))continue;
       const sq={f:from.f,r,c},p=at(state,sq);
       if(!p||p.color!==color)out.push(sq);
     }
@@ -398,7 +533,7 @@ function marshalTargets(state,from,color){
 // A rotation must not carry an Emperor onto a square that can't be captured (see hasFlankAxis).
 function rotationKeepsEmperorsSafe(state,f,dir){
   if(!EMPEROR_CAPTURABLE_ONLY)return true;
-  const n=SIZES[f];
+  const n=state.fields[f].size;
   for(let r=0;r<n;r++)for(let c=0;c<n;c++){
     const p=state.fields[f].grid[r][c];
     if(p&&!p.removing&&p.kind==="emperor"){
@@ -411,8 +546,9 @@ function rotationKeepsEmperorsSafe(state,f,dir){
 
 // dir 1 = right, -1 = left; omit dir to ask "can this field be rotated either way?"
 function canRotate(state,f,color,dir){
-  const allowed=countField(state,color,f,"squire")>0&&
-    !(MODES[state.mode].marshalLocksRotation!==false&&hasMarshal(state,f,other(color)));
+  const M=MODES[state.mode];
+  const present=M.rotateWithAnyPiece?countField(state,color,f)>0:countField(state,color,f,"squire")>0;
+  const allowed=present&&!(M.marshalLocksRotation!==false&&hasMarshal(state,f,other(color)));
   if(!allowed)return false;
   if(dir===undefined)return rotationKeepsEmperorsSafe(state,f,1)||rotationKeepsEmperorsSafe(state,f,-1);
   return rotationKeepsEmperorsSafe(state,f,dir);
@@ -426,7 +562,7 @@ function legalMoves(state,color=state.turn){
   })));
   findPieces(state,color,"marshal").forEach(from=>
     marshalTargets(state,from,color).forEach(to=>moves.push({type:"marshalMove",from,to})));
-  SIZES.forEach((_,f)=>{
+  state.fields.forEach((_,f)=>{
     for(const dir of[1,-1])if(canRotate(state,f,color,dir))moves.push({type:"rotate",f,dir});
   });
   return moves;
@@ -434,9 +570,9 @@ function legalMoves(state,color=state.turn){
 
 // Early-exit version used for the "no legal move" loss check.
 function hasLegalMove(state,color){
-  if(SIZES.some((_,f)=>canRotate(state,f,color)))return true;
+  if(state.fields.some((_,f)=>canRotate(state,f,color)))return true;
   if(findPieces(state,color,"marshal").some(m=>marshalTargets(state,m,color).length))return true;
-  for(let f=0;f<SIZES.length;f++)for(let r=0;r<SIZES[f];r++)for(let c=0;c<SIZES[f];c++){
+  for(let f=0;f<state.fields.length;f++)for(let r=0;r<state.fields[f].size;r++)for(let c=0;c<state.fields[f].size;c++){
     if(at(state,{f,r,c}))continue;
     for(const kind of KINDS)if(canPlace(state,kind,f,r,c,color))return true;
   }
@@ -455,7 +591,7 @@ function rotateField(state,f,dir){
 /* ---------- scoring ---------- */
 
 // Half the squares plus one: 3×3 -> 5, 5×5 -> 13, 7×7 -> 25 (used by Plurality).
-const fieldThreshold=f=>Math.floor(SIZES[f]*SIZES[f]/2)+1;
+const fieldThreshold=(state,f)=>Math.floor(state.fields[f].size*state.fields[f].size/2)+1;
 
 // Weighted presence on a field (weights come from the mode; Hill: 1/1/2, Plurality: 1/2/3).
 function fieldInfluence(state,f){
@@ -469,7 +605,7 @@ function fieldInfluence(state,f){
 function fieldOwner(state,f){
   const i=fieldInfluence(state,f);
   if(MODES[state.mode].boardMajority){            // Plurality: need half the board AND more than the opponent
-    const need=fieldThreshold(f);
+    const need=fieldThreshold(state,f);
     if(i.white>=need&&i.white>i.black)return"white";
     if(i.black>=need&&i.black>i.white)return"black";
     return null;
@@ -478,7 +614,7 @@ function fieldOwner(state,f){
   return i.white>i.black?"white":"black";
 }
 const fieldPoints=(state,color)=>
-  SIZES.reduce((sum,_,f)=>sum+(fieldOwner(state,f)===color?FIELD_VALUE[f]:0),0);
+  state.fields.reduce((sum,_,f)=>sum+(fieldOwner(state,f)===color?FIELD_VALUE[f]:0),0);
 
 const startTurnOf=(state,color)=>(MODES[state.mode].startTurn||START_TURN)[color];
 
@@ -538,7 +674,7 @@ function hasFlankAxis(state,sq){
 const emperorFields=color=>color==="white"?[0,1]:[4,3];
 
 function canPlaceEmperor(state,color,sq){
-  return state.phase==="setup"&&emperorFields(color).includes(sq.f)&&inside(sq.f,sq.r,sq.c)&&!rawAt(state,sq)&&
+  return state.phase==="setup"&&emperorFields(color).includes(sq.f)&&inside(state,sq.f,sq.r,sq.c)&&!rawAt(state,sq)&&
     (!EMPEROR_CAPTURABLE_ONLY||hasFlankAxis(state,sq));
 }
 
@@ -599,6 +735,7 @@ function applyMove(state,move){
     const sq={f:move.f,r:move.r,c:move.c};
     state.fields[sq.f].grid[sq.r][sq.c]={color,kind:move.kind};
     if(move.kind==="marshal")state.marshalUsed[color]=true;
+    if(move.kind==="knight")state.knightsPlaced[color]++;
     result.touched=[keyOf(sq)];
   }else if(move.type==="marshalMove"){
     const moving=at(state,move.from),victim=at(state,move.to);
@@ -651,6 +788,8 @@ function placementMobility(state,color){
 
 // Value of enemy pieces `color` could capture right now by dropping a Knight.
 function captureThreat(state,color){
+  const lim=MODES[state.mode].knightLimit;
+  if(lim!==undefined&&state.knightsPlaced[color]>=lim)return 0;     // no Knights left to drop
   let threat=0;
   state.fields.forEach((field,f)=>field.grid.forEach((row,r)=>row.forEach((_,c)=>{
     const sq={f,r,c};
@@ -703,6 +842,32 @@ function emperorPressure(state,attacker){
   return pressure+Math.min(near,8)*.3;
 }
 
+// Quadrants: Marshals decide everything (Knights never count toward winning).
+function landingThreat(state,color){
+  let t=0;
+  for(const m of findPieces(state,color,"marshal"))
+    for(const s of marshalTargets(state,m,color)){const p=at(state,s);if(p&&p.color!==color)t+=PIECE_VALUE[p.kind]}
+  return Math.min(t,24);
+}
+function evaluateQuadrants(state,me="black"){
+  const foe=other(me);
+  if(state.winner)return state.winner===me?10000:-10000;
+  if(state.over)return 0;                                           // level at the move limit
+  const mine=findPieces(state,me,"marshal"),theirs=findPieces(state,foe,"marshal");
+  const knightsLeft=c=>MODES.quadrants.knightLimit-state.knightsPlaced[c];
+  // average distance from each of my Marshals to the nearest enemy Marshal (closing in beats hiding)
+  let dist=0;
+  if(theirs.length)for(const m of mine){
+    const g=globalPos(state,m);let best=99;
+    for(const t of theirs){const q=globalPos(state,t);best=Math.min(best,Math.max(Math.abs(q.x-g.x),Math.abs(q.y-g.y)))}
+    dist+=best;
+  }
+  const avgDist=mine.length?dist/mine.length:0;
+  const threats=captureThreat(state,me)-captureThreat(state,foe);
+  const landing=landingThreat(state,me)-landingThreat(state,foe);
+  return (mine.length-theirs.length)*12+threats*.3+landing*.25+(knightsLeft(me)-knightsLeft(foe))*.5-avgDist*.2;
+}
+
 // Plurality: like Hill, plus credit for progress toward each field's half-the-board threshold.
 function evaluatePlurality(state,me="black"){
   const foe=other(me);
@@ -712,8 +877,8 @@ function evaluatePlurality(state,me="black"){
   const rate=fieldPoints(state,me)-fieldPoints(state,foe);
   const bank=state.points[me]-state.points[foe];
   let progress=0;
-  for(let f=0;f<SIZES.length;f++){
-    const i=fieldInfluence(state,f),need=fieldThreshold(f);
+  for(let f=0;f<state.fields.length;f++){
+    const i=fieldInfluence(state,f),need=fieldThreshold(state,f);
     progress+=FIELD_VALUE[f]*(Math.min(i[me],need)-Math.min(i[foe],need))/need;
   }
   const big=fieldOwner(state,BIG_FIELD);
@@ -849,10 +1014,11 @@ function runRuleTests(){
   const put=(s,f,r,c,color,kind)=>{s.fields[f].grid[r][c]={color,kind}};
   const putG=(s,x,y,color,kind)=>{const sq=squareAt(s,x,y);put(s,sq.f,sq.r,sq.c,color,kind);return sq};
   const W="white",B="black";
+  const STANDARD_LAYOUTS=["straight","zigzag","block"];      // the five-field boards
   const hasLegalMoveOfType=(st,color,kind)=>legalMoves(st,color).some(m=>m.type===kind||m.type==="place"&&m.kind===kind);
 
   // ----- layouts -----
-  for(const name of Object.keys(LAYOUTS)){
+  for(const name of STANDARD_LAYOUTS){
     const pos=LAYOUTS[name].positions;
     const W_=Math.max(...pos.map((p,i)=>p.x+SIZES[i])),H_=Math.max(...pos.map((p,i)=>p.y+SIZES[i]));
     check(`${name}: layout is 180° point-symmetric`,
@@ -1028,7 +1194,7 @@ function runRuleTests(){
   // ----- Emperor -----
   const emperorGame=(layoutName="straight")=>createGame({layoutName,mode:"emperor"});
   const emperorBlank=()=>newState({mode:"emperor"});
-  for(const name of Object.keys(LAYOUTS)){
+  for(const name of STANDARD_LAYOUTS){
     const g=emperorGame(name);
     check(`${name}: Emperor mode places one Emperor per side at the home centre`,
       findPieces(g,W,"emperor").length===1&&findPieces(g,B,"emperor").length===1&&
@@ -1106,7 +1272,7 @@ function runRuleTests(){
   check("A draw ends the game with no winner",s.over&&s.winner===null);
 
   // ----- Plurality (majority of the board) -----
-  check("Plurality thresholds are 5 / 13 / 25 (half the squares plus one)",fieldThreshold(0)===5&&fieldThreshold(1)===13&&fieldThreshold(2)===25&&fieldThreshold(3)===13&&fieldThreshold(4)===5);
+  check("Plurality thresholds are 5 / 13 / 25 (half the squares plus one)",(()=>{const t=newState({mode:"plurality"});return fieldThreshold(t,0)===5&&fieldThreshold(t,1)===13&&fieldThreshold(t,2)===25&&fieldThreshold(t,3)===13&&fieldThreshold(t,4)===5})());
   const plur=()=>newState({mode:"plurality",target:15});
   s=plur();for(let c=0;c<3;c++)put(s,0,0,c,W,"squire");put(s,0,1,0,W,"squire");
   check("Plurality: 4 Squires in a 3×3 do not hold it",fieldOwner(s,0)===null);
@@ -1150,6 +1316,98 @@ function runRuleTests(){
   applyMove(s,{type:"place",kind:"squire",f:4,r:0,c:2});
   check("Plurality: equal presence at a tied target means play continues",!s.over);
 
+  // ----- Quadrants -----
+  const quad=()=>createGame({layoutName:"quadrants",mode:"quadrants"});
+  const quadBlank=()=>newState({layoutName:"quadrants",mode:"quadrants"});
+  g=quad();
+  check("Quadrants: four 5×5 fields forming one 10×10 board",g.fields.length===4&&g.fields.every(f=>f.size===5)&&
+    (()=>{let n=0;for(let x=0;x<10;x++)for(let y=0;y<10;y++)if(squareAt(g,x,y))n++;return n===100&&!squareAt(g,10,0)&&!squareAt(g,0,10)})());
+  check("Quadrants: each side starts with 10 Marshals in a row across its back edge (White bottom, Black top)",
+    (()=>{
+      const row=(color,y)=>{let n=0;for(let x=0;x<10;x++){const sq=squareAt(g,x,y);const p=at(g,sq);if(p&&p.color===color&&p.kind==="marshal")n++}return n};
+      return row(W,9)===10&&row(B,0)===10&&countPieces(g,W)===10&&countPieces(g,B)===10;})());
+  check("Quadrants: no Squires, no Emperors, nothing to deploy",
+    findPieces(g,W,"squire").length===0&&findPieces(g,B,"squire").length===0&&findPieces(g,W,"emperor").length===0&&g.marshalUsed.white&&g.marshalUsed.black);
+  check("Quadrants: the opening position is point-symmetric between the two sides",
+    (()=>{for(let x=0;x<10;x++){const a=at(g,squareAt(g,x,9)),b=at(g,squareAt(g,9-x,0));if(!a||!b||a.kind!==b.kind||a.color===b.color)return false}return true})());
+  check("Quadrants: only Marshal moves and rotations exist at the start (no placements)",
+    legalMoves(g,W).every(m=>m.type==="marshalMove"||m.type==="rotate")&&!legalMoves(g,W).some(m=>m.type==="place"));
+  check("Quadrants: Squires can never be placed",!(()=>{for(let f=0;f<4;f++)for(let r=0;r<5;r++)for(let c=0;c<5;c++)if(canPlace(g,"squire",f,r,c,W))return true;return false})());
+  check("Quadrants: a Marshal cannot be deployed",!(()=>{for(let f=0;f<4;f++)for(let r=0;r<5;r++)for(let c=0;c<5;c++)if(canPlace(g,"marshal",f,r,c,W))return true;return false})());
+
+  s=quadBlank();put(s,0,2,4,W,"marshal");put(s,3,4,4,B,"marshal");
+  const qt=marshalTargets(s,{f:0,r:2,c:4},W);
+  check("Quadrants: a Marshal steps across a quadrant border (NW → NE)",qt.length===8&&qt.some(t=>t.f===1&&t.r===2&&t.c===0)&&qt.some(t=>t.f===1&&t.r===1&&t.c===0)&&qt.some(t=>t.f===1&&t.r===3&&t.c===0));
+  s=quadBlank();put(s,0,4,4,W,"marshal");
+  check("Quadrants: a Marshal at the centre meets all four quadrants (8 moves)",marshalTargets(s,{f:0,r:4,c:4},W).length===8&&new Set(marshalTargets(s,{f:0,r:4,c:4},W).map(t=>t.f)).size===4);
+  s=quadBlank();put(s,0,0,0,W,"marshal");
+  check("Quadrants: a Marshal in the board corner has 3 moves",marshalTargets(s,{f:0,r:0,c:0},W).length===3);
+  s=quadBlank();put(s,0,2,4,W,"marshal");put(s,1,2,0,B,"marshal");put(s,3,4,4,B,"marshal");
+  r=applyMove(s,{type:"marshalMove",from:{f:0,r:2,c:4},to:{f:1,r:2,c:0}});
+  check("Quadrants: a Marshal captures by moving onto an enemy across a border",r.landed&&s.fields[1].grid[2][0].color===W&&countPieces(s,B,"marshal")===1);
+  check("Quadrants: Marshals cannot move onto their own pieces",(()=>{const t=quadBlank();put(t,0,2,4,W,"marshal");put(t,1,2,0,W,"marshal");return !marshalTargets(t,{f:0,r:2,c:4},W).some(x=>x.f===1&&x.r===2&&x.c===0)})());
+
+  // knights: capture-only, anchored by Marshals/Knights, limited to 5, never move
+  s=quadBlank();put(s,0,2,4,W,"marshal");put(s,1,2,0,B,"marshal");put(s,3,4,4,B,"marshal");
+  check("Quadrants: a Knight may be placed to flank across a border (Marshal anchor)",canPlace(s,"knight",1,2,1,W));
+  check("Quadrants: a Knight cannot be placed without a capture",!canPlace(s,"knight",3,0,0,W));
+  r=applyMove(s,{type:"place",kind:"knight",f:1,r:2,c:1});
+  check("Quadrants: the Knight captures the flanked Marshal",r.captured.length===1&&countPieces(s,B,"marshal")===1&&s.knightsPlaced.white===1);
+  s=quadBlank();put(s,0,2,4,W,"marshal");put(s,1,2,0,B,"marshal");put(s,3,4,4,B,"marshal");s.knightsPlaced.white=5;
+  check("Quadrants: a sixth Knight is not allowed, even where it would capture",!canPlace(s,"knight",1,2,1,W)&&!legalMoves(s,W).some(m=>m.type==="place"));
+  s.knightsPlaced.white=4;
+  check("Quadrants: the fifth Knight is still allowed",canPlace(s,"knight",1,2,1,W));
+  check("Quadrants: the Knight limit is per player",(()=>{const t=quadBlank();put(t,0,2,4,B,"marshal");put(t,1,2,0,W,"marshal");put(t,3,4,4,W,"marshal");t.knightsPlaced.white=5;return canPlace(t,"knight",1,2,1,B)})());
+  check("Quadrants: Knights are never legal moves to move (no Knight movement)",!legalMoves(s,W).some(m=>m.type==="marshalMove"&&at(s,m.from).kind==="knight"));
+
+  // rotation
+  s=quadBlank();put(s,0,0,0,W,"marshal");put(s,3,4,4,B,"marshal");
+  check("Quadrants: you can rotate a quadrant you have a piece in",canRotate(s,0,W));
+  check("Quadrants: you cannot rotate a quadrant where you have no piece",!canRotate(s,1,W)&&!canRotate(s,2,W));
+  put(s,0,1,1,B,"marshal");
+  check("Quadrants: an enemy Marshal does NOT lock rotation",canRotate(s,0,W,1)&&canRotate(s,0,W,-1));
+  s=quadBlank();put(s,0,0,0,W,"knight");put(s,3,4,4,B,"marshal");put(s,1,0,0,W,"marshal");
+  check("Quadrants: a Knight alone is enough presence to rotate",canRotate(s,0,W));
+  check("King of the Hill still needs a Squire to rotate (Marshal alone is not enough)",
+    (()=>{const t=newState({mode:"hill"});put(t,0,0,0,W,"marshal");return !canRotate(t,0,W)&&(put(t,0,1,1,W,"squire"),canRotate(t,0,W))})());
+  // rotating a quadrant into a flank: NW right-rotate sends old column 2 (rows 0..2) onto row 2 (cols 4,3,2)
+  s=quadBlank();put(s,0,0,2,B,"marshal");put(s,0,1,2,B,"marshal");put(s,0,2,2,W,"marshal");put(s,1,2,0,W,"marshal");put(s,3,4,4,B,"marshal");
+  check("Quadrants: before the turn there is no flank (column B,B,W reaches the board edge)",capturesForMove(s,{type:"place",kind:"knight",f:3,r:0,c:0},W).length===0);
+  r=applyMove(s,{type:"rotate",f:0,dir:1});
+  check("Quadrants: rotating a quadrant captures the enemy Marshals it turns into a flank (across the seam)",
+    r.captured.length===2&&countPieces(s,B,"marshal")===1&&!s.over);
+  s=quadBlank();put(s,0,0,2,B,"marshal");put(s,0,1,2,B,"marshal");put(s,0,2,2,W,"marshal");put(s,1,2,0,W,"marshal");put(s,3,4,4,B,"marshal");
+  s.turn=B;
+  check("Quadrants: the same position gives the opponent no free capture from its own rotation",(()=>{const t=cloneState(s);const rr=applyMove(t,{type:"rotate",f:0,dir:1});return rr.captured.length===0})());
+
+  // victory conditions
+  s=quadBlank();put(s,0,2,4,W,"marshal");put(s,1,2,0,B,"marshal");put(s,0,0,0,B,"knight");put(s,3,4,4,W,"marshal");
+  r=applyMove(s,{type:"marshalMove",from:{f:0,r:2,c:4},to:{f:1,r:2,c:0}});
+  check("Quadrants: capturing the last enemy Marshal wins at once, even if the loser still has Knights",s.over&&s.winner===W&&/every enemy Marshal/.test(s.endReason));
+  s=quadBlank();put(s,0,0,0,W,"marshal");put(s,3,4,4,B,"marshal");put(s,3,4,3,B,"marshal");s.turns.black=49;s.turns.white=50;s.turn=B;
+  applyMove(s,{type:"marshalMove",from:{f:3,r:4,c:4},to:{f:3,r:3,c:4}});
+  check("Quadrants: at the move limit the side with more Marshals wins (Black 2 vs White 1)",s.over&&s.winner===B&&/Move limit reached/.test(s.endReason));
+  s=quadBlank();put(s,0,0,0,W,"marshal");put(s,0,0,1,W,"marshal");put(s,3,4,4,B,"marshal");s.turns.black=49;s.turns.white=50;s.turn=B;
+  applyMove(s,{type:"marshalMove",from:{f:3,r:4,c:4},to:{f:3,r:3,c:4}});
+  check("Quadrants: at the move limit, White 2 vs Black 1 → White wins",s.over&&s.winner===W);
+  s=quadBlank();put(s,0,0,0,W,"marshal");put(s,3,4,4,B,"marshal");for(let c=0;c<3;c++)put(s,1,0,c,B,"knight");s.turns.black=49;s.turns.white=50;s.turn=B;
+  applyMove(s,{type:"marshalMove",from:{f:3,r:4,c:4},to:{f:3,r:3,c:4}});
+  check("Quadrants: equal Marshals at the limit is a draw — Knights do not count toward victory",s.over&&s.winner===null&&/draw/.test(s.endReason));
+  s=quadBlank();put(s,0,0,0,W,"marshal");put(s,3,4,4,B,"marshal");s.turns.black=48;s.turns.white=49;s.turn=B;
+  applyMove(s,{type:"marshalMove",from:{f:3,r:4,c:4},to:{f:3,r:3,c:4}});
+  check("Quadrants: the game does not end before the 50th turn each",!s.over&&s.turns.black===49);
+  s=quadBlank();put(s,0,0,0,W,"marshal");put(s,3,4,4,B,"marshal");s.turn=W;s.turns.white=49;
+  applyMove(s,{type:"marshalMove",from:{f:0,r:0,c:0},to:{f:0,r:0,c:1}});
+  check("Quadrants: the limit is checked after Black's turn, so both sides get 50 turns",!s.over&&s.turns.white===50);
+  s=quadBlank();put(s,0,0,0,W,"marshal");put(s,3,4,4,B,"marshal");
+  check("Quadrants: no 'lose all your Squires' rule and no repetition draw",MODES.quadrants.squireLoss===false&&MODES.quadrants.repetitionDraw===false);
+  g=quad();
+  check("Quadrants: a full Normal-AI move is legal from the opening position",(()=>{const m=chooseAI(cloneState(g),"normal","white");return !!m&&legalMoves(g,"white").some(l=>JSON.stringify(l)===JSON.stringify(m))})());
+  s=quadBlank();put(s,0,2,4,W,"marshal");put(s,1,2,0,B,"marshal");put(s,3,4,4,W,"marshal");
+  {let wins=0;
+   for(const level of["easy","normal","optimized"]){const m=chooseAI(s,level,"white");const t=cloneState(s);applyMove(t,m);if(t.over&&t.winner===W)wins++}
+   check("Quadrants: the AI plays a winning move when one exists (capturing the last enemy Marshal), at every level",wins===3);}
+
   // ----- Emperor start (Emperor only) and flank-immune squares -----
   g=emperorGame();
   check("Emperor start: no Squires on the board, only the Emperors",
@@ -1158,7 +1416,7 @@ function runRuleTests(){
     legalMoves(g,W).length===4&&legalMoves(g,W).every(m=>m.type==="place"&&m.kind==="squire"));
   check("Emperor start: no rotation or Marshal yet (needs Squires)",!hasLegalMoveOfType(g,W,"rotate")&&!hasLegalMoveOfType(g,W,"marshal"));
   const immune={straight:2,zigzag:2,block:2};
-  for(const name of Object.keys(LAYOUTS)){
+  for(const name of STANDARD_LAYOUTS){
     const gs=createGame({layoutName:name,mode:"emperor",emperorSetup:true});
     let n=0;for(let r=0;r<3;r++)for(let c=0;c<3;c++)if(!isFlankable(gs,{f:0,r,c}))n++;
     check(`${name}: exactly ${immune[name]} of White's 9 home squares can never be flanked`,n===immune[name]);
@@ -1272,20 +1530,22 @@ function humanTurn(){
 }
 
 function bounds(){
+  const sizes=layoutSizes(game.layoutName);
   return LAYOUTS[game.layoutName].positions.reduce((out,p,i)=>({
-    cols:Math.max(out.cols,p.x+SIZES[i]),rows:Math.max(out.rows,p.y+SIZES[i])}),{cols:0,rows:0});
+    cols:Math.max(out.cols,p.x+sizes[i]),rows:Math.max(out.rows,p.y+sizes[i])}),{cols:0,rows:0});
 }
 function computeCell(){
   const fit=Math.floor(($("workspaceWrap").clientWidth-42)/bounds().cols);
   return Math.max(30,Math.min(46,fit||46));
 }
-const squareLabel=sq=>`${FIELD_NAMES[sq.f]} row ${sq.r+1} col ${sq.c+1}`;
+const fieldName=f=>(LAYOUTS[game.layoutName].names||FIELD_NAMES)[f];
+const squareLabel=sq=>`${fieldName(sq.f)} row ${sq.r+1} col ${sq.c+1}`;
 
 function actionAvailable(action,color){
   if(game.over)return false;
   if(game.phase==="setup")return action==="emperor"&&color===ui.setupSide;
   if(action==="emperor")return false;
-  if(isRotate(action))return SIZES.some((_,f)=>canRotate(game,f,color,action==="rotateRight"?1:-1));
+  if(isRotate(action))return game.fields.some((_,f)=>canRotate(game,f,color,action==="rotateRight"?1:-1));
   if(action==="marshalMove")return findPieces(game,color,"marshal").length>0;
   if(action==="marshal")return !game.marshalUsed[color]&&SIZES.some((_,f)=>countField(game,color,f,"squire")>=MARSHAL_MIN_SQUIRES);
   return legalTargetKeys(action,color).size>0;
@@ -1351,13 +1611,13 @@ function clickCell(f,r,c){
   const action=ui.action;
 
   if(action==="marshalMove"){
-    if(!ui.selected){
-      if(piece&&piece.color===color&&piece.kind==="marshal"){ui.selected=target;return say("Marshal selected. Click a highlighted square.")}
-      return say("Click your Marshal first.");
+    if(piece&&piece.color===color&&piece.kind==="marshal"){          // (re)select a Marshal; with several, click another to switch
+      ui.selected=target;return say("Marshal selected. Click a highlighted square.");
     }
+    if(!ui.selected)return say("Click one of your Marshals first.");
     if(marshalTargets(game,ui.selected,color).some(s=>keyOf(s)===keyOf(target)))
       return play({type:"marshalMove",from:ui.selected,to:target});
-    return say("The Marshal moves one square in any direction within its own field, onto an empty or enemy square.");
+    return say(`The Marshal moves one square in any direction ${MODES[game.mode].marshalAcrossFields?"anywhere on the board":"within its own field"}, onto an empty or enemy square.`);
   }
 
   if(isRotate(action)){
@@ -1379,7 +1639,7 @@ function clickCell(f,r,c){
 function describeMove(move){
   if(move.type==="place")return`placed a ${cap(move.kind)} at ${squareLabel(move)}`;
   if(move.type==="marshalMove")return`moved the Marshal to ${squareLabel(move.to)}`;
-  return`rotated ${FIELD_NAMES[move.f]} ${move.dir===1?"right":"left"}`;
+  return`rotated ${fieldName(move.f)} ${move.dir===1?"right":"left"}`;
 }
 
 function snapshot(){return{state:cloneState(game),logLen:ui.log.length,positions:new Map(ui.positions)}}
@@ -1389,7 +1649,7 @@ function play(move){
   const color=game.turn,moveNo=Math.floor(game.ply/2)+1;
   const result=applyMove(game,move);
 
-  if(!game.over){                                   // threefold repetition = draw
+  if(!game.over&&MODES[game.mode].repetitionDraw!==false){     // threefold repetition = draw (not in Quadrants)
     const key=positionKey(game),n=(ui.positions.get(key)||0)+1;
     ui.positions.set(key,n);
     if(n>=3)declareDraw(game,"Draw: the same position occurred three times.");
@@ -1489,6 +1749,7 @@ function confirmEmperor(){
 }
 
 function startNewGame(first=false){
+  if(!MODES[$("mode").value]||!LAYOUTS[$("layout").value])return false;     // e.g. Quadrants: not playable yet
   if(!first&&game&&!game.over&&game.ply>0&&!confirm("Start a new game? The current game will be lost."))return false;
   const mode=$("mode").value;
   game=createGame({layoutName:$("layout").value,mode,target:Number($("target").value)||DEFAULT_TARGET,emperorSetup:mode==="emperor"});
@@ -1515,7 +1776,7 @@ const TARGET_OPTIONS={
 };
 function syncModeControls(){
   const m=$("mode").value;
-  $("targetLabel").hidden=m==="emperor";
+  $("targetLabel").hidden=m==="emperor"||m==="quadrants";
   const t=TARGET_OPTIONS[m];
   if(t&&$("target").dataset.mode!==m){
     $("target").innerHTML=t.values.map(v=>`<option value="${v}"${v===t.def?" selected":""}>${v} points</option>`).join("");
@@ -1537,6 +1798,7 @@ const emperorState=color=>game.phase==="setup"?"being placed":
   findPieces(game,color,"emperor").length?"standing":"<strong>captured</strong>";
 
 function rulesHTML(mode){
+  if(mode==="quadrants")return quadrantsRulesHTML();
   const emp=mode==="emperor",plur=mode==="plurality",hill=!emp,lock=MODES[mode].marshalLocksRotation!==false;
   const goal=emp
     ?`<strong>Goal.</strong> Capture the enemy <strong>Emperor</strong>. Your Emperor drives your campaign; the game ends the moment either Emperor is captured. There are no points and fields have no value in this mode. You also win instantly if your opponent has no legal move.`
@@ -1607,13 +1869,56 @@ function emperorPanelHTML(){
     <div class="legend muted"><span>✓ can rotate</span>${lock?"<span>🔒 blocked by enemy Marshal</span>":""}<span>— needs a Squire there</span></div>`;
 }
 
+function quadrantsPanelHTML(){
+  const lim=MODES.quadrants.moveLimit;
+  const rows=game.fields.map((_,f)=>`<tr><td>${fieldName(f)}</td><td>W ${canRotate(game,f,"white")?"✓":"—"} · B ${canRotate(game,f,"black")?"✓":"—"}</td></tr>`).join("");
+  return`<h2>Quadrants</h2>
+    <div><strong>Marshals:</strong> White ${countPieces(game,"white","marshal")} · ${nameOf("black")} ${countPieces(game,"black","marshal")}.
+      At the limit of ${lim} turns each, the side with more Marshals wins (Knights don't count).</div>
+    <table><tr><th>Quadrant</th><th>Can rotate? (W · B)</th></tr>${rows}</table>
+    <div class="legend muted"><span>✓ you have a piece in it, so you can rotate it (nothing can lock a rotation here)</span><span>— none of your pieces there</span></div>`;
+}
+
+function quadrantsRulesHTML(){
+  const M=MODES.quadrants;
+  return`<h2>How to play — Quadrants</h2>
+    <div><strong>Goal.</strong> Capture every enemy <strong>Marshal</strong>. If nobody manages it within ${M.moveLimit} turns each, the side with more Marshals left wins (level = draw). Knights never count toward winning.</div>
+    <h3>The board</h3>
+    <ul>
+      <li>One 10×10 board made of four 5×5 quadrants. Each quadrant can be rotated on its own. Lines, flanks and Marshal steps all cross the borders between quadrants.</li>
+      <li>There are no Squires. Each side starts with <strong>10 Marshals</strong> in a row across its back edge: White along the bottom, Black along the top. White moves first.</li>
+      <li><strong>Piece key</strong> (the move panel under the board; your last choice stays selected between turns, and Esc or pressing it again clears it): ♘ knight · ♖ rook = Marshal · ↺ ↻ = rotate a quadrant.</li>
+    </ul>
+    <h3>Your turn: press one icon, then click the board</h3>
+    <ul>
+      <li><strong>Move Marshal</strong> (rook) – click one of your Marshals, then a highlighted square: one step in any direction (diagonals too), anywhere on the board, onto an empty square or onto an enemy piece, which it captures. It cannot step onto your own pieces.</li>
+      <li><strong>Place Knight</strong> – only on a square where it <em>captures</em>: in a straight row or column, the Knight and another of your pieces (Marshal or Knight) must bracket one or more enemy pieces. Knights never move, and each player may place only <strong>${M.knightLimit}</strong> in the whole game.</li>
+      <li><strong>Rotate Left / Right</strong> – turn a quadrant 90° (every piece in it moves). You need at least one of your own pieces in that quadrant. Nothing locks a rotation in this mode, so you may turn a quadrant even when enemy Marshals are in it. Right is clockwise.</li>
+    </ul>
+    <h3>Captures</h3>
+    <ul>
+      <li>A line of one or more enemy pieces (no gaps) between two of your pieces is captured. The two ends can be any of your pieces (Marshal or Knight).</li>
+      <li>Captures happen on <em>your</em> move and only for lines involving the piece you just placed or moved. After a <strong>rotation</strong>, every flank that touches the rotated quadrant captures, so you can turn a quadrant into captures.</li>
+      <li>A piece that is placed or moved <em>between</em> two enemy pieces is safe. It can only be lost to a later flank that involves a piece the enemy places or moves, or a rotation of its quadrant.</li>
+      <li>Captured pieces flash twice and are removed.</li>
+    </ul>
+    <h3>Winning, turns and ending early</h3>
+    <ul>
+      <li>Capturing the last enemy Marshal wins at once, even if they still have Knights.</li>
+      <li>After ${M.moveLimit} turns each (checked after Black’s turn), the side with more Marshals wins; level is a draw.</li>
+      <li>There is no repetition rule in this mode; the turn limit ends any stalemate.</li>
+      <li><strong>End Game</strong> makes the player to move forfeit.</li>
+    </ul>`;
+}
+
 function scoringHTML(){
+  if(game.mode==="quadrants")return quadrantsPanelHTML();
   if(game.mode==="emperor")return emperorPanelHTML();
   const plur=game.mode==="plurality";
   const rows=SIZES.map((_,f)=>{
     const i=fieldInfluence(game,f),owner=fieldOwner(game,f);
     return`<tr><td>${FIELD_NAMES[f]}${f===BIG_FIELD?" ★":""}</td><td>${FIELD_VALUE[f]}</td>
-      ${plur?`<td>${fieldThreshold(f)} of ${SIZES[f]*SIZES[f]}</td>`:""}
+      ${plur?`<td>${fieldThreshold(game,f)} of ${SIZES[f]*SIZES[f]}</td>`:""}
       <td>${i.white}</td><td>${i.black}</td>
       <td>${owner?`<strong>${nameOf(owner)}</strong>`:'<span class="muted">Nobody</span>'}</td>
       <td>W ${rotationMark(f,"white")} · B ${rotationMark(f,"black")}</td></tr>`;
@@ -1646,8 +1951,11 @@ function panelsHTML(){
       return`<button class="pal ${color}${extra}${armed?" armed":""}" data-action="${action}" data-side="${color}" title="${TIPS[action]}" aria-label="${TIPS[action]}"${on?"":" disabled"}><span class="g">${glyph}</span><small>${caption}</small></button>`;
     };
     const marshalAct=game.marshalUsed[color]?"marshalMove":"marshal";
-    const pieces=[mk("squire",GLYPH[color].squire,"Squire"),mk("knight",GLYPH[color].knight,"Knight"),
-      mk(marshalAct,GLYPH[color].marshal,marshalAct==="marshal"?"Deploy Marshal":"Move Marshal")];
+    const M=MODES[game.mode],left=M.knightLimit===undefined?null:M.knightLimit-game.knightsPlaced[color];
+    const pieces=[];
+    if(!M.noSquires)pieces.push(mk("squire",GLYPH[color].squire,"Squire"));
+    pieces.push(mk("knight",GLYPH[color].knight,left===null?"Knight":`Knight (${left} left)`));
+    pieces.push(mk(marshalAct,GLYPH[color].marshal,marshalAct==="marshal"?"Deploy Marshal":"Move Marshal"));
     if(game.mode==="emperor")pieces.push(mk("emperor",GLYPH[color].emperor,"Emperor"));
     const title=nameOf(color)+(game.over?"":live?" — your move":" — waiting");
     return`<div class="mpanel ${color}${live?" live":""}"><div class="mp-title">${title}</div>
@@ -1664,11 +1972,21 @@ function render(){
   document.documentElement.style.setProperty("--glyph",Math.round(cell*.68)+"px");
 
   const hill=MODES[game.mode].usesPoints,setup=game.phase==="setup";   // `hill` = a points mode (Hill or Plurality)
+  $("gameSummary").textContent=[MODES[game.mode].label,LAYOUTS[game.layoutName].label,
+    "vs "+$("opponent").selectedOptions[0].textContent.replace(/^Computer – /,"Computer: "),
+    hill?`play to ${game.target}`:""].filter(Boolean).join(" · ");
   const points=hill?score(game):null,size=bounds(),color=activeColor(),mine=humanTurn();
   $("status").textContent=`${game.over?"Game over":setup?"Setup":nameOf(game.turn)+" to move"}${ui.busy?" — thinking":""} • ${ui.message}`;
   $("status").classList.toggle("over",game.over);
 
   $("scores").innerHTML=["white","black"].map(c=>{
+    if(game.mode==="quadrants"){
+      const lim=MODES.quadrants.moveLimit,left=MODES.quadrants.knightLimit-game.knightsPlaced[c];
+      return`<div class="score${!game.over&&color===c?" turn":""}"><strong>${nameOf(c)}</strong><br>
+        Marshals: <strong>${countPieces(game,c,"marshal")}</strong><br>
+        Knights: ${countPieces(game,c,"knight")} on the board · ${left} left to place<br>
+        Turn ${Math.min(game.turns[c]+(game.over?0:(color===c?1:0)),lim)} of ${lim}</div>`;
+    }
     const squires=countPieces(game,c,"squire");
     return`<div class="score${!game.over&&color===c?" turn":""}"><strong>${nameOf(c)}</strong><br>
       ${hill?`Points: <strong>${points[c].total}</strong> / ${game.target}<br>
@@ -1693,7 +2011,7 @@ function render(){
 
   // board
   const targets=mine&&ui.action&&!isRotate(ui.action)?legalTargetKeys(ui.action,color):new Set();
-  const rotatable=mine&&isRotate(ui.action)?new Set(SIZES.map((_,f)=>f).filter(f=>canRotate(game,f,color,ui.action==="rotateRight"?1:-1))):null;
+  const rotatable=mine&&isRotate(ui.action)?new Set(game.fields.map((_,f)=>f).filter(f=>canRotate(game,f,color,ui.action==="rotateRight"?1:-1))):null;
   const active=document.activeElement;
   const focusSel=active&&active.dataset&&active.dataset.f!==undefined?
     `[data-f="${active.dataset.f}"][data-r="${active.dataset.r}"][data-c="${active.dataset.c}"]`:null;
@@ -1744,22 +2062,14 @@ document.addEventListener("keydown",event=>{
     ui.lastAction[activeColor()]=null;ui.action=null;ui.selected=null;say("Move cancelled. Pick a move.");
   }
 });
-$("newGame").addEventListener("click",()=>startNewGame());
 $("endGame").addEventListener("click",endGame);
 $("undoBtn").addEventListener("click",undo);
 $("confirmEmperor").addEventListener("click",confirmEmperor);
-// Choosing a mode or layout starts that game straight away (asks first if a game is under way).
-for(const id of["mode","layout"])$(id).addEventListener("change",()=>{
-  syncModeControls();
-  if(!startNewGame()){$("mode").value=game.mode;$("layout").value=game.layoutName;syncModeControls()}
-});
-$("target").addEventListener("change",()=>{
-  game.target=Number($("target").value)||DEFAULT_TARGET;
-  say(`Target set to ${game.target} points.`);
-});
-$("opponent").addEventListener("change",()=>{render();maybeRunAI()});
+$("newGame").addEventListener("click",()=>startNewGame());     // same settings
+$("changeSetup").addEventListener("click",showSetup);
+$("cancelSetup").addEventListener("click",showGame);
 $("copyLog").addEventListener("click",()=>{
-  const text=[`Squires & Rotations — mode: ${MODES[game.mode].label}, layout: ${LAYOUTS[game.layoutName].label}, opponent: ${opponent()}`,
+  const text=[`Squires and Knights — mode: ${MODES[game.mode].label}, layout: ${LAYOUTS[game.layoutName].label}, opponent: ${opponent()}`,
     ...ui.log].join("\n");
   (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).catch(()=>{
     const t=document.createElement("textarea");t.value=text;document.body.appendChild(t);t.select();
@@ -1767,7 +2077,7 @@ $("copyLog").addEventListener("click",()=>{
   });
 });
 let resizeTimer;
-window.addEventListener("resize",()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(render,120)});
+window.addEventListener("resize",()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(game&&!$("gameScreen").hidden)render()},120)});
 
 if(new URLSearchParams(location.search).has("debug")){
   $("tests").hidden=false;
@@ -1778,7 +2088,84 @@ if(new URLSearchParams(location.search).has("debug")){
   });
 }
 
-startNewGame(true);
+/* ---------- landing screen: mode -> board -> start ---------- */
+
+const MODE_INFO={
+  hill:{layouts:["straight","zigzag","block"]},
+  emperor:{layouts:["straight","zigzag","block"]},
+  plurality:{layouts:["straight","zigzag","block"]},
+  quadrants:{layouts:["quadrants"]}
+};
+const LAYOUT_LABEL={straight:"Straight line",zigzag:"Zig-zag",block:"Big block (homes touch the 7×7)",quadrants:"Quadrants (10×10)"};
+const checkedValue=name=>{const el=document.querySelector(`input[name="${name}"]:checked`);return el?el.value:null};
+
+// Small picture of a board layout: the five fields to scale, home fields tinted blue (White) / red (Black).
+function layoutSVG(name){
+  const pos=LAYOUTS[name].positions,sizes=layoutSizes(name);
+  let W=0,H=0;pos.forEach((p,i)=>{W=Math.max(W,p.x+sizes[i]);H=Math.max(H,p.y+sizes[i])});
+  const fill=["#bcd8f0","#dcebf8","#e4e1da","#fbdcd7","#f2bcb5"];
+  let g="";
+  pos.forEach((p,i)=>{
+    const n=sizes[i];let d="";
+    for(let k=1;k<n;k++)d+=`M${p.x+k} ${p.y}V${p.y+n}M${p.x} ${p.y+k}H${p.x+n}`;
+    g+=`<rect x="${p.x}" y="${p.y}" width="${n}" height="${n}" fill="${fill[i]}" stroke="#555" stroke-width=".16"/>`+
+       `<path d="${d}" stroke="rgba(0,0,0,.25)" stroke-width=".05" fill="none"/>`+
+       `<text x="${p.x+n/2}" y="${p.y+n/2+n*.11}" font-size="${n*.32}" text-anchor="middle" fill="#333" font-family="Arial,sans-serif">${n}×${n}</text>`;
+  });
+  return`<svg class="lp" viewBox="-0.3 -0.3 ${W+.6} ${H+.6}" role="img" aria-label="${LAYOUT_LABEL[name]} board preview">${g}</svg>`;
+}
+function quadrantsSVG(){
+  let g="";
+  [[0,0],[5,0],[0,5],[5,5]].forEach(([x,y],i)=>{
+    let d="";for(let k=1;k<5;k++)d+=`M${x+k} ${y}V${y+5}M${x} ${y+k}H${x+5}`;
+    g+=`<rect x="${x}" y="${y}" width="5" height="5" fill="#e4e1da" stroke="#555" stroke-width=".16"/><path d="${d}" stroke="rgba(0,0,0,.25)" stroke-width=".05" fill="none"/>`+
+       `<text x="${x+2.5}" y="${y+2.8}" font-size="1.4" text-anchor="middle" fill="#333" font-family="Arial,sans-serif">5×5</text>`;
+  });
+  return`<svg class="lp" viewBox="-0.3 -0.3 10.6 10.6" role="img" aria-label="Quadrants board preview: four 5×5 quadrants forming a 10×10 board" style="max-height:170px">${g}</svg>`;
+}
+
+function updateSetup(){
+  const mode=checkedValue("modeChoice"),layout=checkedValue("layoutChoice");
+  const playable=!!mode&&MODE_INFO[mode].playable!==false;
+  $("optionsStep").disabled=!(mode&&layout);
+  $("startGame").disabled=!(mode&&layout&&playable);
+  $("setupNote").textContent=!mode?"Choose a game mode to begin."
+    :!layout?"Now choose a board layout."
+    :!playable?"Quadrants isn't playable yet: its rules are still being finalized."
+    :"Ready. Press Start game.";
+}
+
+function onModeChosen(mode){
+  const previous=checkedValue("layoutChoice");
+  $("mode").value=mode;syncModeControls();
+  const names=MODE_INFO[mode].layouts;
+  $("layoutGrid").innerHTML=names.map(n=>`<label class="layout-opt">${n==="quadrants"?quadrantsSVG():layoutSVG(n)}`+
+    `<span class="r"><input type="radio" name="layoutChoice" value="${n}"${n==="quadrants"||n===previous?" checked":""}> ${LAYOUT_LABEL[n]}</span></label>`).join("");
+  $("layoutStep").disabled=false;
+  $("layoutHint").textContent=mode==="quadrants"?"Quadrants has a single board:":"Pick a board under the picture:";
+  updateSetup();
+}
+
+function showGame(){$("setupScreen").hidden=true;$("gameScreen").hidden=false;window.scrollTo(0,0);if(game)render()}
+function showSetup(){
+  $("gameScreen").hidden=true;$("setupScreen").hidden=false;
+  $("cancelSetup").hidden=!game;
+  window.scrollTo(0,0);
+}
+
+$("modeStep").addEventListener("change",event=>{
+  if(event.target.name==="modeChoice")onModeChosen(event.target.value);
+});
+$("layoutStep").addEventListener("change",event=>{
+  if(event.target.name==="layoutChoice"){$("layout").value=event.target.value;updateSetup()}
+});
+$("startGame").addEventListener("click",()=>{
+  const mode=checkedValue("modeChoice"),layout=checkedValue("layoutChoice");
+  if(!mode||!layout)return;
+  $("mode").value=mode;$("layout").value=layout;
+  if(startNewGame())showGame();
+});
+updateSetup();      // landing screen: nothing is selected and no board is shown until a mode and board are chosen
 </script>
 </body>
 </html>

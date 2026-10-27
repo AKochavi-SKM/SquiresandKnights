@@ -123,6 +123,50 @@ pre#testOutput{white-space:pre-wrap;margin-top:12px;padding:13px;background:#fff
 .setup-actions .primary{padding:12px 26px;font-size:17px}
 .summary{font-weight:bold;margin-right:6px}
 @media(max-width:700px){.banner-inner .crest{display:none}}
+/* ---- tutorial ---- */
+#tutorialScreen{max-width:1000px;margin:6px auto 30px}
+.tut-status{padding:12px 14px;background:#fff8e1;border-left:4px solid #c9a227;margin-bottom:12px;font-size:15px;line-height:1.45}
+.tut-pips{display:inline-flex;gap:6px;margin:0 8px 0 2px;vertical-align:middle}
+.tut-pips i{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;border:2px solid #b9a15a;background:#fff;color:#5a4710;font:bold 11px/1 Georgia,serif;font-style:normal}
+.tut-pips i.on{background:var(--dark);border-color:var(--dark);color:#f1d98a}
+.tut-pips i.done{background:#efe6c8}
+.tut-stage{position:relative}
+.tut-stage .workspace-wrap{min-height:420px;display:grid;align-items:center}
+.tut-label{position:absolute;font:14px/1.2 "Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;color:#5a4710;text-align:center;pointer-events:none}
+.tut-layer{position:absolute;inset:0;z-index:30;display:flex;overflow:auto;padding:14px;background:rgba(23,18,14,.45)}
+.tut-layer[hidden]{display:none}
+.scroll{position:relative;margin:auto;width:min(480px,100%);padding:20px 26px 18px;color:#2b1c08;
+  background:radial-gradient(ellipse at 18% 0,#f8edcd 0,#efdcae 58%,#e3cb92 100%);
+  border:3px solid #7a5a1a;border-radius:4px;
+  box-shadow:inset 0 0 0 4px #efdcae,inset 0 0 0 5px #b8923a,0 12px 30px rgba(0,0,0,.5);
+  font-family:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;animation:scrollIn .28s ease-out}
+.scroll h3{margin:0 0 10px;font-family:"MedievalSharp","Palatino Linotype",Georgia,serif;font-weight:400;font-size:27px;line-height:1.1;text-align:center;color:#4a2f08}
+.scroll h3::after{content:"";display:block;width:140px;margin:9px auto 0;border-top:1px solid #8a6d12;border-bottom:1px solid #8a6d12;height:2px;opacity:.7}
+.scroll .lore{margin:0 0 12px;font-size:17px;line-height:1.6;font-style:italic}
+.scroll .rule{margin:0 0 16px;padding:9px 13px;font-size:16px;line-height:1.55;background:rgba(122,90,26,.13);border-left:4px solid #8a6d12}
+.scroll .btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.scroll button{padding:10px 24px;font:inherit;font-size:16px;font-weight:bold;color:#f1d98a;background:#2d2218;border:2px solid #c9a227;border-radius:4px}
+.scroll button:hover:not(:disabled){background:#43321f;border-color:#e3c456}
+.scroll button.ghost{background:transparent;color:#4a2f08;border-color:#7a5a1a}
+.scroll button.ghost:hover:not(:disabled){background:rgba(122,90,26,.15);border-color:#4a2f08}
+.scroll button:focus-visible{outline:3px solid #005587;outline-offset:2px}
+.pal.glow{border-color:#c9a227;animation:glowPulse 1.5s ease-in-out infinite}
+.pal.pop{animation:palPop .5s ease-out}
+.pal.glow.pop{animation:palPop .5s ease-out,glowPulse 1.5s .5s ease-in-out infinite}
+.cell.fresh .pc{animation:spawn .55s ease-out both}
+.workspace.clearing .pc{transition:opacity .6s ease;opacity:0}
+.lockmark{position:absolute;inset:0;z-index:8;display:grid;place-items:center;font-size:calc(var(--cell) * 1.6);background:rgba(192,57,43,.2);pointer-events:none;animation:lockShake .5s ease-out}
+@keyframes scrollIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 0 3px rgba(201,162,39,.6)}50%{box-shadow:0 0 0 6px rgba(201,162,39,.25),0 0 16px 5px rgba(201,162,39,.75)}}
+@keyframes palPop{0%{transform:scale(.5);opacity:0}70%{transform:scale(1.12);opacity:1}100%{transform:scale(1)}}
+@keyframes spawn{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+@keyframes lockShake{0%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}100%{transform:none}}
+@media(prefers-reduced-motion:reduce){
+  .pal.glow,.pal.glow.pop{animation:none;box-shadow:0 0 0 4px rgba(201,162,39,.85)}
+  .pal.pop,.scroll,.cell.fresh .pc,.lockmark{animation:none}
+  .workspace.clearing .pc{transition:none}
+}
+@media(max-width:700px){.scroll{padding:16px 16px 14px}.scroll h3{font-size:23px}.scroll .lore{font-size:16px}.tut-stage .workspace-wrap{min-height:460px}}
 </style>
 </head>
 <body>
@@ -140,12 +184,13 @@ pre#testOutput{white-space:pre-wrap;margin-top:12px;padding:13px;background:#fff
 <main>
   <section id="setupScreen" class="setup" aria-labelledby="setupTitle">
     <h2 id="setupTitle">Choose your game</h2>
-    <p class="muted">Pick a game mode, then a board. Every mode adds new rules to the same pieces, so King of the Hill is the easiest place to start.</p>
+    <p class="muted">New here? Begin with the Tutorial: four short lessons on a small practice board. Otherwise pick a game mode, then a board. Every mode adds new rules to the same pieces, so King of the Hill is the easiest one to play first.</p>
 
     <fieldset class="step" id="modeStep">
       <legend><span class="stepn">1</span>Game mode</legend>
       <div class="mode-cards">
-        <label class="mode-card"><input type="radio" name="modeChoice" value="hill"><span class="mc"><strong>King of the Hill</strong><span class="tag">Start here &middot; learn the pieces</span><span class="desc">Hold fields to bank points every turn; first to the target wins. The big center field decides most games.</span></span></label>
+        <label class="mode-card"><input type="radio" name="modeChoice" value="tutorial"><span class="mc"><strong>Tutorial</strong><span class="tag">Start here &middot; 4 short lessons</span><span class="desc">Learn Squires, Knights, pivoting a field and the Marshal on a small practice board. No opponent, no score.</span></span></label>
+        <label class="mode-card"><input type="radio" name="modeChoice" value="hill"><span class="mc"><strong>King of the Hill</strong><span class="tag">The classic &middot; points</span><span class="desc">Hold fields to bank points every turn; first to the target wins. The big center field decides most games.</span></span></label>
         <label class="mode-card"><input type="radio" name="modeChoice" value="emperor"><span class="mc"><strong>Emperor</strong><span class="tag">Hidden Emperors</span><span class="desc">Secretly place your Emperor, then grow an army outward from it. Capture the enemy Emperor to win. No points.</span></span></label>
         <label class="mode-card"><input type="radio" name="modeChoice" value="plurality"><span class="mc"><strong>Plurality</strong><span class="tag">Slower &middot; strategic</span><span class="desc">A field only scores once you hold half the board on it. Knights count 2, Marshals 3. The longest points game.</span></span></label>
         <label class="mode-card"><input type="radio" name="modeChoice" value="quadrants"><span class="mc"><strong>Quadrants</strong><span class="tag">New &middot; all Marshals</span><span class="desc">The Marshal's showdown on one 10&times;10 board of four rotating 5&times;5 quadrants. Ten Marshals each, no Squires. Eliminate the enemy Marshals.</span></span></label>
@@ -223,6 +268,22 @@ pre#testOutput{white-space:pre-wrap;margin-top:12px;padding:13px;background:#fff
       <ol id="log"></ol>
       <button id="copyLog">Copy log</button>
     </details>
+  </div>
+
+  <div id="tutorialScreen" hidden>
+    <div class="toolbar">
+      <span id="tLesson" class="summary"></span>
+      <span id="tPips" class="tut-pips" aria-hidden="true"></span>
+      <button id="tRestart">Restart lesson</button>
+      <button id="tSkip">Skip lesson</button>
+      <button id="tLeave">Leave tutorial</button>
+    </div>
+    <div id="tStatus" class="tut-status" role="status" aria-live="polite"></div>
+    <div class="tut-stage">
+      <div class="workspace-wrap" id="tWrap"><div id="tWorkspace" class="workspace"></div></div>
+      <div id="tPopupLayer" class="tut-layer" hidden></div>
+    </div>
+    <div id="tPanels" class="move-panels"></div>
   </div>
 
   <div id="debugArea"><button id="tests" hidden>Run Rule Tests</button><pre id="testOutput" hidden></pre></div>
@@ -2058,7 +2119,7 @@ $("workspace").addEventListener("click",event=>{
   if(b)clickCell(+b.dataset.f,+b.dataset.r,+b.dataset.c);
 });
 document.addEventListener("keydown",event=>{
-  if(event.key==="Escape"&&ui.action&&game.phase!=="setup"){
+  if(event.key==="Escape"&&$("tutorialScreen").hidden&&ui.action&&game.phase!=="setup"){
     ui.lastAction[activeColor()]=null;ui.action=null;ui.selected=null;say("Move cancelled. Pick a move.");
   }
 });
@@ -2088,9 +2149,401 @@ if(new URLSearchParams(location.search).has("debug")){
   });
 }
 
+/* =====================================================================
+   TUTORIAL: scripted lessons that run on the real engine rules.
+   A lesson lays out a small board (setup) and walks through steps. A step says
+   which palette buttons are live (tools), when it is finished (done), and which
+   scrolls to show before (pre) and after (post). Nothing here changes the rules.
+   ===================================================================== */
+LAYOUTS.tutorial={label:"Tutorial",sizes:[3,5],names:["Home field · 3×3","Front field · 5×5"],
+  positions:[{x:0,y:1},{x:3,y:0}]};      // the same seam as the real board: the 3×3 meets the 5×5 on its west edge
+MODES.tutorial={label:"Tutorial",usesPoints:false,squireLoss:false,
+  setup(){},afterCaptures(){},endTurn(){},evaluate:()=>0};
+
+const ROMAN=["I","II","III","IV"];
+const TUT_NAME={squire:"Squire",knight:"Knight",marshal:"Deploy Marshal",marshalMove:"Move Marshal",rotateLeft:"Rotate Left",rotateRight:"Rotate Right"};
+const TUT_HINT={
+  squire:"Click a highlighted square beside one of your pieces.",
+  knight:"Click a green dot. A Knight may only be placed where it captures.",
+  marshal:"Click any empty square of the 5×5. You hold three Squires there.",
+  marshalMove:"Click a highlighted square. A red ring marks an enemy the Marshal can capture.",
+  rotateLeft:"Click the 5×5 field to turn it left (counter-clockwise).",
+  rotateRight:"Click the 5×5 field to turn it right (clockwise)."
+};
+const TUT_NUDGE={
+  squire:"Squires go on an empty square directly above, below, or beside one of your pieces (not diagonally).",
+  knight:"A Knight must capture. Click one of the green dots, where it brackets enemy pieces against one of yours.",
+  marshal:"Deploy the Marshal on an empty square of the 5×5, the field where your three Squires stand."
+};
+
+const tPut=(g,x,y,color,kind)=>{const q=squareAt(g,x,y);g.fields[q.f].grid[q.r][q.c]={color,kind};T.fresh.add(keyOf(q))};
+const tHasKnightMove=g=>g.fields.some((fd,f)=>fd.grid.some((row,r)=>row.some((_,c)=>canPlace(g,"knight",f,r,c,"white"))));
+
+const LESSONS=[
+  {title:"The Squire's Oath",
+   setup(g){for(let y=1;y<=3;y++)tPut(g,0,y,"white","squire")},
+   steps:[
+     {unlock:["squire"],tools:["squire"],
+      say:"Your army begins with three Squires. Press the glowing Squire button, then click a highlighted square.",
+      done:(g,m)=>m.type==="place"&&m.kind==="squire",
+      post:{title:"The Squire's Oath",
+        lore:"Squires are the foundation of every army. Knights cannot get far without them, and it is Squires who hold the ground once it is won.",
+        rule:"A Squire may be placed on any empty square directly above, below, or beside (orthogonally) any of your pieces: another Squire, a Knight, or a Marshal. Diagonals do not count."}},
+     {tools:["squire"],blockCapture:true,
+      enter(g){tPut(g,5,2,"black","squire");tPut(g,6,2,"black","squire")},
+      say:"Black holds the far field. Keep placing Squires to build a road toward the enemy until you touch their line.",
+      done:g=>tHasKnightMove(g)},
+     {unlock:["knight"],tools:["knight"],
+      say:"Press the glowing Knight button, then click a green dot.",
+      pre:{title:"Contact!",
+        lore:"Your road has reached the enemy line. Now the Knights ride out, heavy horse that break a line in a single charge.",
+        rule:"A Knight can only be placed where it captures: it must bracket one or more enemy pieces in a straight row or column, with another of your pieces at the far end. The green dots mark where it can strike."},
+      done:(g,m,r)=>r.captured.length>0,
+      post:{title:"The Line Breaks",
+        lore:"Caught between Knight and Squire, the enemy fell. Your Squires made the charge possible: bring them forward first, then strike.",
+        rule:"Captured pieces are removed from the board. Knights never move once placed, and any of your pieces can anchor the far end of a flank."}}
+   ]},
+  {title:"The Knight's Charge",
+   setup(g){for(let y=1;y<=3;y++)tPut(g,0,y,"white","squire");for(let x=1;x<=5;x++)tPut(g,x,2,"black","squire")},
+   steps:[
+     {tools:["knight"],
+      say:"Press the glowing Knight button and strike the far end of the black line.",
+      pre:{title:"Flanking the Line",
+        lore:"A true charge does not stop at one man. A whole enemy column stands between your Squire and the open ground beyond it.",
+        rule:"Every unbroken enemy piece in the line is captured, however many there are, and the line may run across the seam between two fields."},
+      done:(g,m,r)=>r.captured.length>0,
+      post:{title:"A Single Stroke",
+        lore:"One Knight and one Squire, and the whole column falls. Guard your own lines: the enemy can do the same to you.",
+        rule:"Only the two ends of a line need to be yours. A gap breaks the line, so a single empty square can save everything behind it."}}
+   ]},
+  {title:"Turning the Tide",
+   setup(g){
+     for(let y=1;y<=3;y++)tPut(g,2,y,"white","squire");                     // a road of Squires on the 3×3's east edge
+     tPut(g,5,0,"black","squire");tPut(g,5,1,"white","squire");              // the 5×5's middle column: B, W, empty, W, B
+     tPut(g,5,3,"white","squire");tPut(g,5,4,"black","squire");},
+   steps:[
+     {unlock:["rotateLeft","rotateRight"],tools:["rotateLeft","rotateRight"],field:1,
+      say:"No Knight can strike right now. Press either glowing rotate button, then click the 5×5 field.",
+      pre:{title:"Turning the Tide",
+        lore:"When a line cannot be broken head-on, turn the field itself. A skilled commander pivots the battle so the enemy marches into the trap.",
+        rule:"Rotate a whole field 90°, left or right, and every piece on it turns with the board. Any enemy left bracketed by your pieces is captured. You need at least one Squire on the field to turn it. Both directions work here."},
+      done:(g,m,r)=>m.type==="rotate"&&r.captured.length>0,
+      post:{title:"The Tide Has Turned",
+        lore:"Not a single piece was placed, yet the enemy line was broken. Had you turned the field the other way, the other black Squire would have fallen instead.",
+        rule:"Right is clockwise and left is counter-clockwise. Be careful: an enemy Marshal standing on a field stops you from turning it. That brings us to the Marshal."}}
+   ]},
+  {title:"The Marshal's Command",
+   setup(g){for(let y=1;y<=3;y++)tPut(g,3,y,"white","squire");tPut(g,6,1,"black","squire");tPut(g,6,3,"black","squire")},
+   steps:[
+     {unlock:["marshal"],tools:["marshal"],
+      say:"Press the glowing Marshal button, then click any empty square of the 5×5.",
+      pre:{title:"The Marshal's Command",
+        lore:"The Marshal is your general, and a general rides only with an army behind him.",
+        rule:"A Marshal can only be deployed on a field where you already hold three Squires, and you get one per game. You have three on the 5×5, so place him on any empty square there."},
+      done:(g,m)=>m.type==="place"&&m.kind==="marshal"},
+     {tools:["marshalMove"],
+      say:"Click a highlighted square. Step onto a black Squire (red ring) to capture it.",
+      pre:{title:"A General on the March",
+        lore:"Once the Marshal stands, he is the most powerful piece on the field. He answers to no road: he goes where he is needed.",
+        rule:"He steps one square in any direction, diagonals included, so he commands the 3×3 around him. Moving onto an enemy piece captures it."},
+      done:(g,m,r)=>m.type==="marshalMove"&&(r.captured.length>0||!!r.landed)},
+     {tools:[],demo:true,
+      say:"Press Black's rotate button to see what your Marshal does to the terrain.",
+      pre:{title:"Master of the Terrain",
+        lore:"A Marshal does more than fight. He controls the ground he stands on, and whoever controls the terrain controls the battle.",
+        rule:"While your Marshal stands on a field, your opponent cannot rotate it. You still can. Hold the right field and the enemy can never turn the battle against you."},
+      done:()=>true,
+      post:{title:"Your Training Is Complete",
+        lore:"Squires to hold the ground, Knights to break the line, the pivot to turn the field, and the Marshal to command it. The real battlefield awaits.",
+        rule:"King of the Hill is the best place to begin: hold fields to bank points every turn, and the first side to the target wins.",
+        buttons:[{label:"Play King of the Hill",fn:()=>tLaunchHill()},{label:"Back to menu",ghost:true,fn:()=>tLeave()},{label:"Replay tutorial",ghost:true,fn:()=>startLesson(0)}]}}
+   ]}
+];
+
+/* ---------- tutorial state ---------- */
+
+const T={game:null,lesson:0,step:0,action:null,selected:null,popup:null,animating:false,token:0,
+  last:[],landed:[],fresh:new Set(),pop:new Set(),lockShown:false,message:""};
+const tStep=()=>LESSONS[T.lesson].steps[T.step];
+
+// Palette buttons stay revealed once introduced (restart-safe: derived from where we are).
+function tUnlocked(){
+  const set=new Set();
+  for(let l=0;l<=T.lesson;l++){
+    const st=LESSONS[l].steps,upTo=l===T.lesson?T.step:st.length-1;
+    for(let i=0;i<=upTo;i++)(st[i].unlock||[]).forEach(k=>set.add(k));
+  }
+  return set;
+}
+
+// Squares the current tool may use: the engine's own legality, narrowed by the step.
+function tKeys(action){
+  const g=T.game,keys=new Set(),s=tStep();
+  if(action==="marshalMove"){
+    if(T.selected)marshalTargets(g,T.selected,"white").forEach(q=>keys.add(keyOf(q)));
+    else findPieces(g,"white","marshal").forEach(q=>keys.add(keyOf(q)));
+    return keys;
+  }
+  g.fields.forEach((fd,f)=>fd.grid.forEach((row,r)=>row.forEach((_,c)=>{
+    if(!canPlace(g,action,f,r,c,"white"))return;
+    if(action==="squire"&&s.blockCapture&&linesFrom(g,{f,r,c},"white").length)return;   // save captures for the Knight
+    keys.add(keyOf({f,r,c}));
+  })));
+  return keys;
+}
+
+/* ---------- flow ---------- */
+
+function startTutorial(){
+  $("setupScreen").hidden=true;$("gameScreen").hidden=true;$("tutorialScreen").hidden=false;
+  window.scrollTo(0,0);
+  startLesson(0);
+}
+function startLesson(n){
+  T.token++;T.lesson=n;T.step=0;
+  T.game=newState({layoutName:"tutorial",mode:"tutorial"});
+  T.fresh=new Set();LESSONS[n].setup(T.game);
+  Object.assign(T,{action:null,selected:null,popup:null,animating:false,last:[],landed:[],lockShown:false});
+  $("tPopupLayer").hidden=true;
+  enterStep();
+}
+function enterStep(){
+  const s=tStep();
+  T.pop=new Set(s.unlock||[]);
+  if(s.enter)s.enter(T.game);
+  Object.assign(T,{action:null,selected:null,last:[],landed:[],lockShown:false,message:s.say||""});
+  tRender();
+  if(s.pre)tPopup(s.pre,()=>{});
+}
+function finishStep(){
+  const s=tStep(),tok=T.token;
+  Object.assign(T,{action:null,selected:null,last:[],landed:[]});
+  tRender();
+  const next=()=>{if(tok===T.token)tAdvance()};
+  if(s.post)tPopup(s.post,next);else next();
+}
+function tAdvance(){
+  const L=LESSONS[T.lesson];
+  if(T.step<L.steps.length-1){T.step++;enterStep();return}
+  if(T.lesson<LESSONS.length-1){
+    const tok=T.token;
+    T.animating=true;T.message="The field is cleared for the next lesson.";tRender();
+    $("tWorkspace").classList.add("clearing");
+    setTimeout(()=>{if(tok===T.token)startLesson(T.lesson+1)},750);
+    return;
+  }
+  tLeave();
+}
+function tLeave(){
+  T.token++;T.popup=null;$("tPopupLayer").hidden=true;$("tutorialScreen").hidden=true;showSetup();
+}
+function tLaunchHill(){
+  tLeave();
+  document.querySelector('input[name="modeChoice"][value="hill"]').checked=true;
+  onModeChosen("hill");
+  const lay=document.querySelector('input[name="layoutChoice"][value="straight"]');
+  if(lay){lay.checked=true;$("layout").value="straight"}
+  updateSetup();
+  $("startGame").click();
+}
+
+/* ---------- scrolls (popups) ---------- */
+
+function tPopup(def,next){
+  const buttons=def.buttons||[{label:"Onward",fn:next}];
+  T.popup={def,buttons};
+  const layer=$("tPopupLayer");
+  layer.innerHTML=`<div class="scroll" role="dialog" aria-modal="true" aria-labelledby="scrollTitle">
+    <h3 id="scrollTitle">${def.title}</h3>
+    <p class="lore">${def.lore}</p>
+    <p class="rule"><strong>The rule.</strong> ${def.rule}</p>
+    <div class="btns">${buttons.map((b,i)=>`<button type="button" data-pbtn="${i}"${b.ghost?' class="ghost"':""}>${b.label}</button>`).join("")}</div></div>`;
+  layer.hidden=false;
+  const first=layer.querySelector("button");if(first)first.focus({preventScroll:true});
+  tRender();
+}
+$("tPopupLayer").addEventListener("click",event=>{
+  const b=event.target.closest("[data-pbtn]");
+  if(!b||!T.popup)return;
+  const fn=T.popup.buttons[+b.dataset.pbtn].fn;
+  T.popup=null;$("tPopupLayer").hidden=true;
+  tRender();
+  if(fn)fn();
+});
+
+/* ---------- actions ---------- */
+
+function tChoose(action){
+  if(T.popup||T.animating)return;
+  if(action==="demoBlackRotate")return tDemo();
+  if(T.action===action){T.action=null;T.selected=null;T.message="Move cancelled. Press the glowing button again.";return tRender()}
+  T.action=action;T.selected=null;
+  if(action==="marshalMove"){const m=findPieces(T.game,"white","marshal");if(m.length===1)T.selected=m[0]}
+  T.message=TUT_HINT[action];
+  tRender();
+}
+
+function tClickCell(f,r,c){
+  if(T.popup||T.animating)return;
+  const g=T.game,s=tStep(),a=T.action,sq={f,r,c};
+  if(!a){
+    T.message=s.tools&&s.tools.length?`Press the glowing ${TUT_NAME[s.tools[0]]} button first.`:"Follow the instructions above the board.";
+    return tRender();
+  }
+  if(isRotate(a)){
+    const dir=a==="rotateRight"?1:-1;
+    if(s.field!==undefined&&f!==s.field){T.message="Turn the 5×5 field. That is where the battle is.";return tRender()}
+    if(canRotate(g,f,"white",dir))return tRotate(f,dir);
+    T.message="You need a Squire on that field to turn it.";return tRender();
+  }
+  if(a==="marshalMove"){
+    const p=at(g,sq);
+    if(p&&p.color==="white"&&p.kind==="marshal"){T.selected=sq;T.message="Marshal selected. Click a highlighted square.";return tRender()}
+    if(T.selected&&marshalTargets(g,T.selected,"white").some(t=>keyOf(t)===keyOf(sq)))
+      return tPlay({type:"marshalMove",from:T.selected,to:sq});
+    T.message="The Marshal steps one square in any direction, onto an empty square or an enemy.";return tRender();
+  }
+  if(tKeys(a).has(keyOf(sq)))return tPlay({type:"place",kind:a,f,r,c});
+  T.message=a==="squire"&&s.blockCapture&&canPlace(g,a,f,r,c,"white")
+    ?"That square would capture right now. Save the capture for your Knight and extend the road elsewhere."
+    :TUT_NUDGE[a];
+  tRender();
+}
+
+// A quick visual turn of the field, then the real rotation.
+function tRotate(f,dir){
+  T.animating=true;
+  const el=$("tWorkspace").querySelector(`.field[data-field="${f}"]`);
+  if(el&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+    el.style.transition="transform .4s ease";el.style.transform=`rotate(${dir*90}deg)`;
+  }
+  const tok=T.token;
+  setTimeout(()=>{if(tok!==T.token)return;T.animating=false;tPlay({type:"rotate",f,dir})},430);
+}
+
+function tPlay(move){
+  const g=T.game,tok=T.token;
+  const res=applyMove(g,move);
+  Object.assign(g,{turn:"white",over:false,winner:null,endReason:""});      // the tutorial never ends a game or hands over the turn
+  T.last=res.touched;T.landed=res.landed?[res.landed]:[];
+  if(move.type==="marshalMove")T.selected=move.to;
+  const lost=res.captured.length+(res.landed?1:0);
+  if(lost){
+    T.animating=true;T.message=`Captured ${lost} piece${lost===1?"":"s"}!`;tRender();
+    setTimeout(()=>{if(tok!==T.token)return;settle(g);T.animating=false;T.landed=[];tAfterMove(move,res)},1000);
+  }else{tRender();tAfterMove(move,res)}
+}
+function tAfterMove(move,res){
+  const s=tStep();
+  if(s.done(T.game,move,res))return finishStep();
+  T.message=s.say;tRender();
+}
+
+// Lesson 4 finale: let Black try, using the real rotation rule.
+function tDemo(){
+  const g=T.game,tok=T.token,ok=canRotate(g,1,"black",1);
+  T.lockShown=!ok;T.animating=true;
+  T.message=ok?"Black turns the field.":"Black tries to rotate the 5×5 field... blocked! A White Marshal stands on it.";
+  tRender();
+  setTimeout(()=>{if(tok!==T.token)return;T.animating=false;finishStep()},1700);
+}
+
+/* ---------- rendering ---------- */
+
+function tPanelsHTML(){
+  const un=tUnlocked(),s=tStep(),tools=new Set(s.tools||[]);
+  const mk=(action,glyph,caption,key,extra="")=>{
+    if(!un.has(key))return"";
+    const on=tools.has(action),armed=T.action===action;
+    const cls=`pal white${extra}${armed?" armed":""}${on&&!armed?" glow":""}${T.pop.has(key)?" pop":""}`;
+    const tip=TIPS[action]||TUT_NAME[action];
+    return`<button class="${cls}" data-action="${action}" title="${tip}" aria-label="${tip}"${on?"":" disabled"}><span class="g">${glyph}</span><small>${caption}</small></button>`;
+  };
+  const ma=T.game.marshalUsed.white?"marshalMove":"marshal";
+  const pieces=[mk("squire",GLYPH.white.squire,"Squire","squire"),mk("knight",GLYPH.white.knight,"Knight","knight"),
+    mk(ma,GLYPH.white.marshal,ma==="marshal"?"Deploy Marshal":"Move Marshal","marshal")].join("");
+  const rots=[mk("rotateLeft","↺","Left","rotateLeft"," rot"),mk("rotateRight","↻","Right","rotateRight"," rot")].join("");
+  const white=`<div class="mpanel white live"><div class="mp-title">Your army (White)</div><div class="mp-groups">
+      <div class="mp-group"><span class="mp-label">Place / use a piece</span><div class="mp-btns">${pieces}</div></div>
+      ${rots?`<div class="mp-group"><span class="mp-label">Rotate a field</span><div class="mp-btns">${rots}</div></div>`:""}
+    </div></div>`;
+  const black=s.demo?`<div class="mpanel black live"><div class="mp-title">Black, to move</div><div class="mp-groups">
+      <div class="mp-group"><span class="mp-label">Rotate a field</span><div class="mp-btns">
+        <button class="pal black rot glow" data-action="demoBlackRotate" title="Black tries to rotate the 5×5 field" aria-label="Black tries to rotate the 5×5 field"><span class="g">↻</span><small>Try to rotate</small></button>
+      </div></div></div></div>`:"";
+  return white+black;
+}
+
+function tRender(){
+  const g=T.game,s=tStep(),L=LESSONS[T.lesson],last=T.lesson===LESSONS.length-1;
+  const cell=Math.max(34,Math.min(64,Math.floor(($("tWrap").clientWidth-44)/8)||56));
+  const root=$("tutorialScreen");
+  root.style.setProperty("--cell",cell+"px");
+  root.style.setProperty("--glyph",Math.round(cell*.68)+"px");
+
+  $("tLesson").textContent=`Lesson ${ROMAN[T.lesson]} of ${ROMAN[LESSONS.length-1]}: ${L.title}`;
+  $("tPips").innerHTML=LESSONS.map((_,i)=>`<i class="${i===T.lesson?"on":i<T.lesson?"done":""}">${ROMAN[i]}</i>`).join("");
+  $("tSkip").textContent=last?"Finish tutorial":"Skip lesson";
+  $("tStatus").textContent=T.message;
+
+  const idle=!T.popup&&!T.animating;
+  const targets=idle&&T.action&&!isRotate(T.action)?tKeys(T.action):new Set();
+  const rotatable=idle&&isRotate(T.action)
+    ?new Set(g.fields.map((_,f)=>f).filter(f=>(s.field===undefined||f===s.field)&&canRotate(g,f,"white",T.action==="rotateRight"?1:-1))):null;
+  const fresh=T.fresh;T.fresh=new Set();
+  const names=LAYOUTS.tutorial.names,pos=LAYOUTS.tutorial.positions;
+
+  const ws=$("tWorkspace");
+  ws.classList.remove("clearing");
+  ws.style.width=`${8*cell}px`;ws.style.height=`${5*cell+30}px`;
+  ws.innerHTML=g.fields.map((field,f)=>{
+    const p=pos[f];
+    const cells=field.grid.map((row,r)=>row.map((piece,c)=>{
+      const key=keyOf({f,r,c});
+      const classes=["cell",piece?piece.color:"",piece&&piece.removing?"removing":"",
+        T.landed.includes(key)?"landed":"",T.last.includes(key)?"last":"",
+        targets.has(key)?`legal${piece?" enemy":""}`:"",
+        T.selected&&keyOf(T.selected)===key?"selected":"",fresh.has(key)?"fresh":""].join(" ");
+      const desc=piece?`${piece.color} ${piece.kind}`:"empty";
+      return`<button class="${classes}" data-f="${f}" data-r="${r}" data-c="${c}" aria-label="${names[f]} row ${r+1} col ${c+1}: ${desc}">${piece?`<span class="pc">${GLYPH[piece.color][piece.kind]}</span>`:""}</button>`;
+    }).join("")).join("");
+    const fc=["field",rotatable?(rotatable.has(f)?"pick":"dim"):""].join(" ");
+    return`<section class="${fc}" data-field="${f}" style="left:${p.x*cell}px;top:${p.y*cell}px">
+      <div class="grid held-none" style="grid-template-columns:repeat(${field.size},${cell}px)">${cells}</div>
+      ${f===1&&T.lockShown?'<div class="lockmark" aria-hidden="true">🔒</div>':""}
+    </section>
+    <div class="tut-label" style="left:${p.x*cell}px;top:${(p.y+field.size)*cell+7}px;width:${field.size*cell}px">${names[f]}</div>`;
+  }).join("");
+
+  $("tPanels").innerHTML=tPanelsHTML();
+  T.pop=new Set();
+}
+
+/* ---------- wiring ---------- */
+
+$("tWorkspace").addEventListener("click",event=>{
+  const b=event.target.closest("[data-f]");
+  if(b)tClickCell(+b.dataset.f,+b.dataset.r,+b.dataset.c);
+});
+$("tPanels").addEventListener("click",event=>{
+  const pal=event.target.closest("[data-action]");
+  if(pal&&!pal.disabled)tChoose(pal.dataset.action);
+});
+$("tRestart").addEventListener("click",()=>startLesson(T.lesson));
+$("tSkip").addEventListener("click",()=>{T.lesson<LESSONS.length-1?startLesson(T.lesson+1):tLeave()});
+$("tLeave").addEventListener("click",tLeave);
+document.addEventListener("keydown",event=>{
+  if(event.key==="Escape"&&!$("tutorialScreen").hidden&&!T.popup&&!T.animating&&T.action){
+    T.action=null;T.selected=null;T.message="Move cancelled. Press the glowing button again.";tRender();
+  }
+});
+window.addEventListener("resize",()=>{if(!$("tutorialScreen").hidden)tRender()});
+
+
 /* ---------- landing screen: mode -> board -> start ---------- */
 
 const MODE_INFO={
+  tutorial:{layouts:[]},
   hill:{layouts:["straight","zigzag","block"]},
   emperor:{layouts:["straight","zigzag","block"]},
   plurality:{layouts:["straight","zigzag","block"]},
@@ -2126,6 +2579,11 @@ function quadrantsSVG(){
 
 function updateSetup(){
   const mode=checkedValue("modeChoice"),layout=checkedValue("layoutChoice");
+  if(mode==="tutorial"){
+    $("optionsStep").disabled=true;$("startGame").disabled=false;
+    $("setupNote").textContent="Ready. Press Start tutorial.";
+    return;
+  }
   const playable=!!mode&&MODE_INFO[mode].playable!==false;
   $("optionsStep").disabled=!(mode&&layout);
   $("startGame").disabled=!(mode&&layout&&playable);
@@ -2136,6 +2594,10 @@ function updateSetup(){
 }
 
 function onModeChosen(mode){
+  const tut=mode==="tutorial";
+  $("layoutStep").hidden=tut;$("optionsStep").hidden=tut;
+  $("startGame").textContent=tut?"Start tutorial":"Start game";
+  if(tut){$("layoutGrid").innerHTML="";updateSetup();return}
   const previous=checkedValue("layoutChoice");
   $("mode").value=mode;syncModeControls();
   const names=MODE_INFO[mode].layouts;
@@ -2161,6 +2623,7 @@ $("layoutStep").addEventListener("change",event=>{
 });
 $("startGame").addEventListener("click",()=>{
   const mode=checkedValue("modeChoice"),layout=checkedValue("layoutChoice");
+  if(mode==="tutorial"){startTutorial();return}
   if(!mode||!layout)return;
   $("mode").value=mode;$("layout").value=layout;
   if(startNewGame())showGame();
